@@ -22,10 +22,10 @@ export class Management extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'text', default: '' })
+  @Column({ type: 'text' })
   keywords: string;
 
-  @Column({ type: 'text', default: '' })
+  @Column({ type: 'text' })
   file: string;
 
   @Column({ nullable: false })
@@ -34,12 +34,12 @@ export class Management extends BaseEntity {
   @ManyToOne(() => Category, (category) => category.management, { nullable: false })
   category: Category;
 
-  @CreateDateColumn({ precision: 0 })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ precision: 0 })
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @DeleteDateColumn({ precision: 0 })
+  @DeleteDateColumn({ type: 'timestamp', nullable: true })
   deletedAt: Date | null;
 }

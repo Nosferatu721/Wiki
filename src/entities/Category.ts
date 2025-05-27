@@ -30,13 +30,13 @@ export class Category extends BaseEntity {
   @Column({ default: null })
   createdBy: number;
 
-  @CreateDateColumn({ precision: 0 })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ precision: 0 })
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @DeleteDateColumn({ precision: 0 })
+  @DeleteDateColumn({ type: 'timestamp', nullable: true })
   deletedAt: Date | null;
 
   @OneToMany(() => Management, (management) => management.category)

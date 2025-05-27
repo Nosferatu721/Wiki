@@ -398,3 +398,30 @@ components:
           type: string
           format: date-time
           nullable: true
+    Management:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: string
+        file:
+          type: string
+        createdBy:
+          type: integer
+        category:
+          $ref: '#/components/schemas/Category'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
