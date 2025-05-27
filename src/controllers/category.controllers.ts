@@ -76,7 +76,7 @@ export const getCategoryById = async (req: Request, res: Response) => {
 
 export const getCategoriesBySegmentation = async (req: Request, res: Response) => {
   try {
-    const { grupo, sub_grupo, skill } = req.query;
+    const { grupo, sub_grupo, skill } = req.body;
 
     const query: any = {};
     if (grupo) query.grupo = grupo;
@@ -92,7 +92,7 @@ export const getCategoriesBySegmentation = async (req: Request, res: Response) =
 
 export const getCategoriesByName = async (req: Request, res: Response) => {
   try {
-    const { name } = req.query;
+    const { name } = req.body;
     if (!name) return res.status(400).json({ message: 'Name query parameter is required' });
 
     const categories = await Category.find({
@@ -106,7 +106,7 @@ export const getCategoriesByName = async (req: Request, res: Response) => {
 
 export const getCategoriesWithPagination = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10 } = req.body;
     const skip = (Number(page) - 1) * Number(limit);
     const [categories, total] = await Category.findAndCount({
       skip: skip,

@@ -28,9 +28,12 @@ router.put('/:id', updateCategory);
 router.delete('/:id', deleteCategory);
 
 // Route to get categories by segmentation
-router.get('/filterSegmentation', getCategoriesBySegmentation);
+router.post('/filterSegmentation', getCategoriesBySegmentation);
 
 // Route to get categories by name
-router.get('/filterName', getCategoriesByName);
+router.post('/filterName', getCategoriesByName);
+
+// Route to get categories with pagination
+router.post('/pagination', getCategoriesWithPagination);
 
 export default router;
