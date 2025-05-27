@@ -101,7 +101,7 @@ export const getCategoriesByName = async (req: Request, res: Response) => {
     if (createdBy !== undefined) where.createdBy = createdBy;
 
     const categories = await Category.find({
-      where
+      where,
     });
     return res.status(200).json(categories);
   } catch (error) {
@@ -125,6 +125,40 @@ export const getCategoriesWithPagination = async (req: Request, res: Response) =
       total: total,
       page: Number(page),
       lastPage: Math.ceil(total / Number(limit)),
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Internal server error', error });
+  }
+};
+
+// Obtener categorías con paginación estilo Laravel
+export const getCategoriesPaginated = async (req: Request, res: Response) => {
+  try {
+    let page = parseInt(req.query.page as string);
+    let perPage = parseInt(req.query.per_page as string);
+    if (isNaN(page) || page < 1) page = 1;
+    if (isNaN(perPage) || perPage < 1) perPage = 5;
+    const [data, total] = await Category.findAndCount({
+      skip: (page - 1) * perPage,
+      take: perPage,
+      order: { id: 'ASC' },
+    });
+    const lastPage = Math.ceil(total / perPage);
+    const baseUrl = req.protocol + '://' + req.get('host') + req.baseUrl + req.path;
+    const makePageUrl = (p: number) => `${baseUrl}?page=${p}&per_page=${perPage}`;
+    res.json({
+      current_page: page,
+      data,
+      first_page_url: makePageUrl(1),
+      from: (page - 1) * perPage + 1,
+      last_page: lastPage,
+      last_page_url: makePageUrl(lastPage),
+      next_page_url: page < lastPage ? makePageUrl(page + 1) : null,
+      path: baseUrl,
+      per_page: perPage,
+      prev_page_url: page > 1 ? makePageUrl(page - 1) : null,
+      to: Math.min(page * perPage, total),
+      total,
     });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error', error });

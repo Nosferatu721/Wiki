@@ -1,0 +1,400 @@
+openapi: 3.0.0
+info:
+  title: Wiki API
+  version: 1.0.0
+  description: Documentación de mi API con Swagger
+servers:
+  - url: http://localhost:3000
+paths:
+  # --- Managements ---
+  /api/managements:
+    post:
+      tags: [Gestiones]
+      summary: Crear una nueva gestión
+      consumes:
+        - multipart/form-data
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Título de la gestión
+                description:
+                  type: string
+                  description: Descripción de la gestión
+                keywords:
+                  type: string
+                  description: Palabras clave (array como string JSON)
+                createdBy:
+                  type: integer
+                  description: ID del usuario creador
+                categoryId:
+                  type: integer
+                  description: ID de la categoría
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Archivos a subir
+      responses:
+        '201':
+          description: Gestión creada exitosamente
+    get:
+      tags: [Gestiones]
+      summary: Obtener todas las gestiones
+      responses:
+        '200':
+          description: Lista de gestiones
+  /api/managements/{id}:
+    put:
+      tags: [Gestiones]
+      summary: Actualizar una gestión existente
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la gestión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                categoryId:
+                  type: integer
+      responses:
+        '200':
+          description: Gestión actualizada exitosamente
+    get:
+      tags: [Gestiones]
+      summary: Obtener una gestión por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la gestión
+      responses:
+        '200':
+          description: Gestión encontrada
+    delete:
+      tags: [Gestiones]
+      summary: Eliminar (soft delete) una gestión
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la gestión
+      responses:
+        '200':
+          description: Gestión eliminada exitosamente
+  /api/managements/addKeywords/{id}:
+    put:
+      tags: [Gestiones]
+      summary: Agregar palabras clave a una gestión
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la gestión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                keywords:
+                  type: array
+                  items:
+                    type: string
+                  description: Palabras clave a agregar
+      responses:
+        '200':
+          description: Palabras clave agregadas exitosamente
+  /api/managements/deleteKeywords/{id}:
+    put:
+      tags: [Gestiones]
+      summary: Eliminar palabras clave de una gestión
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la gestión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                keywords:
+                  type: array
+                  items:
+                    type: string
+                  description: Palabras clave a eliminar
+      responses:
+        '200':
+          description: Palabras clave eliminadas exitosamente
+  /api/managements/addFile/{id}:
+    put:
+      tags: [Gestiones]
+      summary: Agregar archivos a una gestión existente
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la gestión
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Archivos a agregar
+      responses:
+        '200':
+          description: Archivos agregados exitosamente
+  /api/managements/deleteFile/{id}:
+    put:
+      tags: [Gestiones]
+      summary: Eliminar archivos de una gestión existente
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la gestión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                  description: Nombres de archivos a eliminar
+      responses:
+        '200':
+          description: Archivos eliminados exitosamente
+  /api/managements/pagination:
+    post:
+      tags: [Gestiones]
+      summary: Obtener gestiones con paginación
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Número de página
+        - in: query
+          name: perPage
+          schema:
+            type: integer
+          description: Cantidad de resultados por página
+      responses:
+        200:
+          description: Gestiones paginadas
+
+  # --- Categories ---
+  /api/categories:
+    post:
+      tags: [Categorías]
+      summary: Crear una nueva categoría
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nombre de la categoría
+                grupo:
+                  type: string
+                  description: Grupo de la categoría
+                sub_grupo:
+                  type: string
+                  description: Subgrupo de la categoría
+                skill:
+                  type: string
+                  description: Habilidad de la categoría
+                createdBy:
+                  type: integer
+                  description: ID del usuario creador
+      responses:
+        '201':
+          description: Categoría creada exitosamente
+    get:
+      tags: [Categorías]
+      summary: Obtener todas las categorías
+      responses:
+        '200':
+          description: Lista de categorías
+  /api/categories/{id}:
+    get:
+      tags: [Categorías]
+      summary: Obtener una categoría por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la categoría
+      responses:
+        '200':
+          description: Categoría encontrada
+    put:
+      tags: [Categorías]
+      summary: Actualizar una categoría por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la categoría
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nuevo nombre de la categoría
+      responses:
+        '200':
+          description: Categoría actualizada exitosamente
+    delete:
+      tags: [Categorías]
+      summary: Eliminar una categoría por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la categoría
+      responses:
+        '200':
+          description: Categoría eliminada exitosamente
+  /api/categories/filterSegmentation:
+    post:
+      tags: [Categorías]
+      summary: Obtener categorías por segmentación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                grupo:
+                  type: string
+                sub_grupo:
+                  type: string
+                skill:
+                  type: string
+                createdBy:
+                  type: integer
+      responses:
+        '200':
+          description: Categorías filtradas por segmentación
+  /api/categories/filterName:
+    post:
+      tags: [Categorías]
+      summary: Obtener categorías por nombre
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nombre a buscar (parcial o completo)
+                createdBy:
+                  type: integer
+                  description: ID del usuario creador
+      responses:
+        '200':
+          description: Categorías filtradas por nombre
+  /api/categories/pagination:
+    post:
+      tags: [Categorías]
+      summary: Obtener categorías con paginación estilo Laravel
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Número de página
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+          description: Cantidad de resultados por página
+  
+components:
+  schemas:
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        grupo:
+          type: string
+        sub_grupo:
+          type: string
+        skill:
+          type: string
+        createdBy:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true

@@ -7,7 +7,7 @@ import {
   deleteCategory,
   getCategoriesBySegmentation,
   getCategoriesByName,
-  getCategoriesWithPagination,
+  getCategoriesPaginated
 } from '../controllers/category.controller';
 
 const router = Router();
@@ -34,6 +34,6 @@ router.post('/filterSegmentation', getCategoriesBySegmentation);
 router.post('/filterName', getCategoriesByName);
 
 // Route to get categories with pagination
-router.post('/pagination', getCategoriesWithPagination);
+router.post('/pagination', getCategoriesPaginated);
 
 export default router;

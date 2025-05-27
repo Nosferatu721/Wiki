@@ -9,6 +9,7 @@ import {
   deleteManagement,
   addFileToManagement,
   deleteFilesFromManagement,
+  getManagementsPaginated,
 } from '../controllers/management.controller';
 import multer from "multer";
 import path from "path";
@@ -24,7 +25,6 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
-
 const upload = multer({ storage });
 
 // Route to create a new management entry
@@ -53,5 +53,8 @@ router.put('/addFile/:id', upload.array("file", 5), addFileToManagement);
 
 // Route to delete a file from an existing management entry
 router.put('/deleteFile/:id', deleteFilesFromManagement);
+
+// Route to get paginated management entries
+router.post('/pagination', getManagementsPaginated);
 
 export default router;
