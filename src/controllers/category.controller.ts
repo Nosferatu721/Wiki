@@ -4,17 +4,18 @@ import { Category } from '../entities/Category';
 
 export const createCategory = async (req: Request, res: Response) => {
   try {
-    const { name, grupo, sub_grupo, skill } = req.body;
-    if (!name || !grupo || !sub_grupo || !skill) {
+    const { name, grupo, sub_grupo, skill, createdBy } = req.body;
+    if (!name || !grupo || !sub_grupo || !skill || createdBy === undefined) {
       return res
         .status(400)
-        .json({ message: 'All fields (name, grupo, sub_grupo, skill) are required' });
+        .json({ message: 'All fields (name, grupo, sub_grupo, skill, createdBy) are required' });
     }
     const category = new Category();
     category.name = name;
     category.grupo = grupo;
     category.sub_grupo = sub_grupo;
     category.skill = skill;
+    category.createdBy = createdBy;
     const savedCategory = await category.save();
     return res.status(201).json(savedCategory);
   } catch (error) {
@@ -76,12 +77,13 @@ export const getCategoryById = async (req: Request, res: Response) => {
 
 export const getCategoriesBySegmentation = async (req: Request, res: Response) => {
   try {
-    const { grupo, sub_grupo, skill } = req.body;
+    const { grupo, sub_grupo, skill, createdBy } = req.body;
 
     const query: any = {};
     if (grupo) query.grupo = grupo;
     if (sub_grupo) query.sub_grupo = sub_grupo;
     if (skill) query.skill = skill;
+    if (createdBy !== undefined) query.createdBy = createdBy;
 
     const categories = await Category.findBy(query);
     return res.status(200).json(categories);
@@ -92,11 +94,14 @@ export const getCategoriesBySegmentation = async (req: Request, res: Response) =
 
 export const getCategoriesByName = async (req: Request, res: Response) => {
   try {
-    const { name } = req.body;
+    const { name, createdBy } = req.body;
     if (!name) return res.status(400).json({ message: 'Name query parameter is required' });
 
+    const where: any = { name: Like(`%${name}%`) };
+    if (createdBy !== undefined) where.createdBy = createdBy;
+
     const categories = await Category.find({
-      where: { name: Like(`%${name}%`) },
+      where
     });
     return res.status(200).json(categories);
   } catch (error) {

@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import { Category } from './entities/Category';
+import { Management } from './entities/Managements';
 
 export const AppDataSource = new DataSource({
   type: 'mysql', // or 'postgres', 'sqlite', etc.
@@ -10,5 +11,5 @@ export const AppDataSource = new DataSource({
   database: 'db_wiki_dev',
   // synchronize: true,
   // logging: true,
-  entities: [Category]
+  entities: [Category, Management],
 });

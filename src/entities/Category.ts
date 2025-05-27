@@ -1,4 +1,14 @@
-import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
+import { Management } from './Managements'; // Assuming Post is the entity for procedures
 
 @Entity()
 export class Category extends BaseEntity {
@@ -17,6 +27,9 @@ export class Category extends BaseEntity {
   @Column()
   skill: string;
 
+  @Column({ default: null })
+  createdBy: number;
+
   @CreateDateColumn({ precision: 0 })
   createdAt: Date;
 
@@ -25,4 +38,7 @@ export class Category extends BaseEntity {
 
   @DeleteDateColumn({ precision: 0 })
   deletedAt: Date | null;
+
+  @OneToMany(() => Management, (management) => management.category)
+  management: Management[];
 }

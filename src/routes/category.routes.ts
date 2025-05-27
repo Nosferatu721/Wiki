@@ -8,7 +8,7 @@ import {
   getCategoriesBySegmentation,
   getCategoriesByName,
   getCategoriesWithPagination,
-} from '../controllers/category.controllers';
+} from '../controllers/category.controller';
 
 const router = Router();
 
