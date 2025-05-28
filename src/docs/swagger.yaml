@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: Documentación de mi API con Swagger
 servers:
-  - url: http://localhost:3000
+  - url: http://localhost:5000
 paths:
   # --- Managements ---
   /api/managements:
@@ -27,8 +27,10 @@ paths:
                   type: string
                   description: Descripción de la gestión
                 keywords:
-                  type: string
-                  description: Palabras clave (array como string JSON)
+                  type: array
+                  items:
+                    type: string
+                  description: Palabras clave (array de strings)
                 createdBy:
                   type: integer
                   description: ID del usuario creador
@@ -351,7 +353,7 @@ paths:
   /api/categories/pagination:
     post:
       tags: [Categorías]
-      summary: Obtener categorías con paginación estilo Laravel
+      summary: Obtener categorías con paginación y filtros opcionales
       parameters:
         - in: query
           name: page
@@ -359,11 +361,60 @@ paths:
             type: integer
           description: Número de página
         - in: query
-          name: per_page
+          name: perPage
           schema:
             type: integer
           description: Cantidad de resultados por página
-  
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Filtrar por nombre (opcional, búsqueda parcial)
+                group:
+                  type: string
+                  description: Filtrar por grupo (opcional)
+      responses:
+        200:
+          description: Categorías paginadas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  current_page:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+                  first_page_url:
+                    type: string
+                  from:
+                    type: integer
+                  last_page:
+                    type: integer
+                  last_page_url:
+                    type: string
+                  next_page_url:
+                    type: string
+                    nullable: true
+                  path:
+                    type: string
+                  per_page:
+                    type: integer
+                  prev_page_url:
+                    type: string
+                    nullable: true
+                  to:
+                    type: integer
+                  total:
+                    type: integer
+
 components:
   schemas:
     Category:
@@ -397,7 +448,10 @@ components:
         description:
           type: string
         keywords:
-          type: string
+          type: array
+          items:
+            type: string
+          description: Palabras clave (array de strings)
         file:
           type: string
         createdBy:

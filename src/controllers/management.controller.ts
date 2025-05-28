@@ -5,39 +5,6 @@ import { Category } from '../entities/Category';
 import fs from 'fs';
 import path from 'path';
 
-// @Entity()
-// export class Management extends BaseEntity {
-//   @PrimaryGeneratedColumn()
-//   id: number;
-
-//   @Column()
-//   title: string;
-
-//   @Column({ type: 'text', nullable: true })
-//   description: string;
-
-//   @Column({ type: 'text', default: '' })
-//   keywords: string;
-
-//   @Column({ type: 'text', default: '' })
-//   file: string;
-
-//   @Column({ nullable: false })
-//   createdBy: number;
-
-//   @ManyToOne(() => Category, (category) => category.management, { nullable: false })
-//   category: Category;
-
-//   @CreateDateColumn({ precision: 0 })
-//   createdAt: Date;
-
-//   @UpdateDateColumn({ precision: 0 })
-//   updatedAt: Date;
-
-//   @DeleteDateColumn({ precision: 0 })
-//   deletedAt: Date | null;
-// }
-
 export const createManagement = async (req: Request, res: Response) => {
   try {
     const { title, description, keywords, createdBy, categoryId } = req.body;
@@ -66,6 +33,7 @@ export const createManagement = async (req: Request, res: Response) => {
     }
     management.file = filesName;
 
+    // Adapted: keywords as array (json)
     let keywordsArray = keywords;
     if (typeof keywords === 'string') {
       try {
@@ -74,14 +42,10 @@ export const createManagement = async (req: Request, res: Response) => {
         keywordsArray = [keywords];
       }
     }
-
-    let keywordsString = '';
-    if (Array.isArray(keywordsArray)) {
-      keywordsString = keywordsArray.join('|');
-    } else {
-      return res.status(400).json({ message: 'Keywords must be an array or a valid string' });
+    if (!Array.isArray(keywordsArray)) {
+      return res.status(400).json({ message: 'Keywords must be an array or a valid string/JSON' });
     }
-    management.keywords = keywordsString;
+    management.keywords = keywordsArray;
 
     const savedManagement = await management.save();
     return res.status(201).json(savedManagement);
@@ -139,9 +103,9 @@ export const addKeywordsToManagement = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Management entry not found' });
     }
 
-    const existingKeywords = management.keywords ? management.keywords.split('|') : [];
+    const existingKeywords = Array.isArray(management.keywords) ? management.keywords : [];
     const newKeywords = keywords.filter((kw: string) => !existingKeywords.includes(kw));
-    management.keywords = [...existingKeywords, ...newKeywords].join('|');
+    management.keywords = [...existingKeywords, ...newKeywords];
     const updatedManagement = await management.save();
     return res.status(200).json(updatedManagement);
   } catch (error) {
@@ -164,8 +128,8 @@ export const deleteKeywordsFromManagement = async (req: Request, res: Response) 
       return res.status(404).json({ message: 'Management entry not found' });
     }
 
-    const existingKeywords = management.keywords ? management.keywords.split('|') : [];
-    management.keywords = existingKeywords.filter((kw: string) => !keywords.includes(kw)).join('|');
+    const existingKeywords = Array.isArray(management.keywords) ? management.keywords : [];
+    management.keywords = existingKeywords.filter((kw: string) => !keywords.includes(kw));
     const updatedManagement = await management.save();
     return res.status(200).json(updatedManagement);
   } catch (error) {
@@ -233,11 +197,16 @@ export const deleteFilesFromManagement = async (req: Request, res: Response) => 
 // Get all Management entries
 export const getManagements = async (req: Request, res: Response) => {
   try {
+    // Adapt keywords in response: always return as array
     const managements = await Management.find({
       relations: ['category'],
       where: { deletedAt: IsNull() },
     });
-    return res.status(200).json(managements);
+    const result = managements.map((m) => ({
+      ...m,
+      keywords: Array.isArray(m.keywords) ? m.keywords : [],
+    }));
+    return res.status(200).json(result);
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error', error });
   }
@@ -260,10 +229,15 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
     });
     const lastPage = Math.ceil(total / perPage);
     const baseUrl = req.protocol + '://' + req.get('host') + req.baseUrl + req.path;
-    const makePageUrl = (p: number) => `${baseUrl}?page=${p}&per_page=${perPage}`;
+    const makePageUrl = (p: number) => `${baseUrl}?page=${p}&perPage=${perPage}`;
+    // Adapt keywords in response: always return as array
+    const result = data.map((m) => ({
+      ...m,
+      keywords: Array.isArray(m.keywords) ? m.keywords : [],
+    }));
     res.json({
       current_page: page,
-      data,
+      data: result,
       first_page_url: makePageUrl(1),
       from: (page - 1) * perPage + 1,
       last_page: lastPage,
@@ -291,7 +265,11 @@ export const getManagementById = async (req: Request, res: Response) => {
     if (!management) {
       return res.status(404).json({ message: 'Management entry not found' });
     }
-    return res.status(200).json(management);
+    // Adapt keywords in response: always return as array
+    return res.status(200).json({
+      ...management,
+      keywords: Array.isArray(management.keywords) ? management.keywords : [],
+    });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error', error });
   }

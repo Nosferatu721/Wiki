@@ -22,8 +22,8 @@ export class Management extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'text' })
-  keywords: string;
+  @Column({ type: 'json', nullable: true })
+  keywords: string[];
 
   @Column({ type: 'text' })
   file: string;

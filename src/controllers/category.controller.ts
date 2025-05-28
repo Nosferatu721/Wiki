@@ -6,9 +6,7 @@ export const createCategory = async (req: Request, res: Response) => {
   try {
     const { name, group, createdBy } = req.body;
     if (!name || !group || createdBy === undefined) {
-      return res
-        .status(400)
-        .json({ message: 'All fields (name, group, createdBy) are required' });
+      return res.status(400).json({ message: 'All fields (name, group, createdBy) are required' });
     }
     const category = new Category();
     category.name = name;
@@ -102,21 +100,29 @@ export const getCategoriesByName = async (req: Request, res: Response) => {
   }
 };
 
-// Obtener categorías con paginación estilo Laravel
+// Obtener categorías con paginación
 export const getCategoriesPaginated = async (req: Request, res: Response) => {
   try {
     let page = parseInt(req.query.page as string);
-    let perPage = parseInt(req.query.per_page as string);
+    let perPage = parseInt(req.query.perPage as string);
     if (isNaN(page) || page < 1) page = 1;
     if (isNaN(perPage) || perPage < 1) perPage = 5;
+
+    // Obtener filtros opcionales de req.body
+    const { name, group } = req.body;
+    const where: any = {};
+    if (name) where.name = Like(`%${name}%`);
+    if (group) where.group = group;
+
     const [data, total] = await Category.findAndCount({
+      where,
       skip: (page - 1) * perPage,
       take: perPage,
       order: { id: 'ASC' },
     });
     const lastPage = Math.ceil(total / perPage);
     const baseUrl = req.protocol + '://' + req.get('host') + req.baseUrl + req.path;
-    const makePageUrl = (p: number) => `${baseUrl}?page=${p}&per_page=${perPage}`;
+    const makePageUrl = (p: number) => `${baseUrl}?page=${p}&perPage=${perPage}`;
     res.json({
       current_page: page,
       data,
