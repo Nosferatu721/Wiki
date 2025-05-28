@@ -25,11 +25,11 @@ export class Management extends BaseEntity {
   @Column({ type: 'json', nullable: true })
   keywords: string[];
 
-  @Column({ type: 'text' })
-  file: string;
+  @Column({ type: 'json', nullable: true })
+  file: string[];
 
-  @Column({ nullable: false })
-  createdBy: number;
+  @Column()
+  rrhhId: number;
 
   @ManyToOne(() => Category, (category) => category.management, { nullable: false })
   category: Category;

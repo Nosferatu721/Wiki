@@ -7,12 +7,10 @@ import path from 'path';
 
 export const createManagement = async (req: Request, res: Response) => {
   try {
-    const { title, description, keywords, createdBy, categoryId } = req.body;
+    const { title, description, keywords, file, rrhhId, categoryId } = req.body;
 
-    if (!title || !createdBy || !categoryId) {
-      return res
-        .status(400)
-        .json({ message: 'Title, createdBy, and categoryId are required fields' });
+    if (!title || !rrhhId || !categoryId) {
+      return res.status(400).json({ message: 'Title, rrhhId, and categoryId are required fields' });
     }
 
     // Validate categoryId
@@ -24,14 +22,24 @@ export const createManagement = async (req: Request, res: Response) => {
     const management = new Management();
     management.title = title;
     management.description = description || null;
-    management.createdBy = createdBy;
+    management.rrhhId = rrhhId;
     management.category = categoryId;
 
-    let filesName = '';
+    // Adapted: file as array (json)
+    let fileArray = file;
     if (req.files && Array.isArray(req.files)) {
-      filesName = req.files.map((file: Express.Multer.File) => file.filename).join('|');
+      fileArray = req.files.map((file: Express.Multer.File) => file.filename);
+    } else if (typeof file === 'string') {
+      try {
+        fileArray = JSON.parse(file);
+      } catch {
+        fileArray = [file];
+      }
     }
-    management.file = filesName;
+    if (!Array.isArray(fileArray)) {
+      return res.status(400).json({ message: 'File must be an array or a valid string/JSON' });
+    }
+    management.file = fileArray;
 
     // Adapted: keywords as array (json)
     let keywordsArray = keywords;
@@ -58,12 +66,10 @@ export const createManagement = async (req: Request, res: Response) => {
 export const updateManagement = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, description, categoryId } = req.body;
+    const { title, description, categoryId, keywords, file } = req.body;
 
     if (!title || !categoryId) {
-      return res
-        .status(400)
-        .json({ message: 'Title, createdBy, and categoryId are required fields' });
+      return res.status(400).json({ message: 'Title, rrhhId, and categoryId are required fields' });
     }
 
     // Validate categoryId
@@ -81,55 +87,24 @@ export const updateManagement = async (req: Request, res: Response) => {
     management.description = description || null;
     management.category = categoryId;
 
-    const updatedManagement = await management.save();
-    return res.status(200).json(updatedManagement);
-  } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
-  }
-};
-
-// Agregar Keywords a Management
-export const addKeywordsToManagement = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { keywords } = req.body;
-
-    if (!keywords || !Array.isArray(keywords)) {
-      return res.status(400).json({ message: 'Keywords must be an array' });
+    // Actualizar keywords si se envían
+    if (typeof keywords !== 'undefined') {
+      let keywordsArray = keywords;
+      if (typeof keywords === 'string') {
+        try {
+          keywordsArray = JSON.parse(keywords);
+        } catch {
+          keywordsArray = [keywords];
+        }
+      }
+      if (!Array.isArray(keywordsArray)) {
+        return res
+          .status(400)
+          .json({ message: 'Keywords must be an array or a valid string/JSON' });
+      }
+      management.keywords = keywordsArray;
     }
 
-    const management = await Management.findOneBy({ id: parseInt(id) });
-    if (!management) {
-      return res.status(404).json({ message: 'Management entry not found' });
-    }
-
-    const existingKeywords = Array.isArray(management.keywords) ? management.keywords : [];
-    const newKeywords = keywords.filter((kw: string) => !existingKeywords.includes(kw));
-    management.keywords = [...existingKeywords, ...newKeywords];
-    const updatedManagement = await management.save();
-    return res.status(200).json(updatedManagement);
-  } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
-  }
-};
-
-// Delete Keywords from Management
-export const deleteKeywordsFromManagement = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { keywords } = req.body;
-
-    if (!keywords || !Array.isArray(keywords)) {
-      return res.status(400).json({ message: 'Keywords must be an array' });
-    }
-
-    const management = await Management.findOneBy({ id: parseInt(id) });
-    if (!management) {
-      return res.status(404).json({ message: 'Management entry not found' });
-    }
-
-    const existingKeywords = Array.isArray(management.keywords) ? management.keywords : [];
-    management.keywords = existingKeywords.filter((kw: string) => !keywords.includes(kw));
     const updatedManagement = await management.save();
     return res.status(200).json(updatedManagement);
   } catch (error) {
@@ -150,8 +125,10 @@ export const addFileToManagement = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
-    const filesName = req.files.map((file: Express.Multer.File) => file.filename).join('|');
-    management.file = management.file ? `${management.file}|${filesName}` : filesName;
+    const filesArray = req.files.map((file: Express.Multer.File) => file.filename);
+    management.file = Array.isArray(management.file)
+      ? [...management.file, ...filesArray]
+      : filesArray;
 
     const updatedManagement = await management.save();
     return res.status(200).json(updatedManagement);
@@ -174,7 +151,7 @@ export const deleteFilesFromManagement = async (req: Request, res: Response) => 
     }
 
     const filesToDelete = req.body.files;
-    const existingFiles = management.file ? management.file.split('|') : [];
+    const existingFiles = Array.isArray(management.file) ? management.file : [];
 
     // Delete files from filesystem
     for (const file of filesToDelete) {
@@ -185,7 +162,7 @@ export const deleteFilesFromManagement = async (req: Request, res: Response) => 
       });
     }
 
-    management.file = existingFiles.filter((file) => !filesToDelete.includes(file)).join('|');
+    management.file = existingFiles.filter((file) => !filesToDelete.includes(file));
 
     const updatedManagement = await management.save();
     return res.status(200).json(updatedManagement);

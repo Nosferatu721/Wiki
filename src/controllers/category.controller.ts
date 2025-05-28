@@ -4,14 +4,14 @@ import { Category } from '../entities/Category';
 
 export const createCategory = async (req: Request, res: Response) => {
   try {
-    const { name, group, createdBy } = req.body;
-    if (!name || !group || createdBy === undefined) {
-      return res.status(400).json({ message: 'All fields (name, group, createdBy) are required' });
+    const { name, groupId, rrhhId } = req.body;
+    if (!name || groupId === undefined || rrhhId === undefined) {
+      return res.status(400).json({ message: 'All fields (name, groupId, rrhhId) are required' });
     }
     const category = new Category();
     category.name = name;
-    category.group = group;
-    category.createdBy = createdBy;
+    category.groupId = parseInt(groupId);
+    category.rrhhId = rrhhId;
     const savedCategory = await category.save();
     return res.status(201).json(savedCategory);
   } catch (error) {
@@ -22,14 +22,15 @@ export const createCategory = async (req: Request, res: Response) => {
 export const updateCategory = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
+    const { name, groupId } = req.body;
 
-    if (!name) return res.status(400).json({ message: 'Category name is required' });
+    if (!name && groupId === undefined) return res.status(400).json({ message: 'At least one field (name or groupId) is required' });
 
     const category = await Category.findOneBy({ id: parseInt(id) });
     if (!category) return res.status(404).json({ message: 'Category not found' });
 
-    category.name = name;
+    if (name) category.name = name;
+    if (groupId !== undefined) category.groupId = parseInt(groupId);
     const updatedCategory = await category.save();
     return res.status(200).json(updatedCategory);
   } catch (error) {
@@ -73,9 +74,9 @@ export const getCategoryById = async (req: Request, res: Response) => {
 
 export const getCategoriesBySegmentation = async (req: Request, res: Response) => {
   try {
-    const { group } = req.body;
+    const { groupId } = req.body;
     const query: any = {};
-    if (group) query.group = group;
+    if (groupId !== undefined) query.groupId = parseInt(groupId);
     const categories = await Category.findBy(query);
     return res.status(200).json(categories);
   } catch (error) {
@@ -85,11 +86,11 @@ export const getCategoriesBySegmentation = async (req: Request, res: Response) =
 
 export const getCategoriesByName = async (req: Request, res: Response) => {
   try {
-    const { name, createdBy } = req.body;
+    const { name, rrhhId } = req.body;
     if (!name) return res.status(400).json({ message: 'Name query parameter is required' });
 
     const where: any = { name: Like(`%${name}%`) };
-    if (createdBy !== undefined) where.createdBy = createdBy;
+    if (rrhhId !== undefined) where.rrhhId = rrhhId;
 
     const categories = await Category.find({
       where,
@@ -109,10 +110,10 @@ export const getCategoriesPaginated = async (req: Request, res: Response) => {
     if (isNaN(perPage) || perPage < 1) perPage = 5;
 
     // Obtener filtros opcionales de req.body
-    const { name, group } = req.body;
+    const { name, groupId } = req.body;
     const where: any = {};
     if (name) where.name = Like(`%${name}%`);
-    if (group) where.group = group;
+    if (groupId !== undefined) where.groupId = parseInt(groupId);
 
     const [data, total] = await Category.findAndCount({
       where,

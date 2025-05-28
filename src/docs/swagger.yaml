@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: Documentación de mi API con Swagger
 servers:
-  - url: http://localhost:5000
+  - url: http://localhost:3000
 paths:
   # --- Managements ---
   /api/managements:
@@ -31,7 +31,7 @@ paths:
                   items:
                     type: string
                   description: Palabras clave (array de strings)
-                createdBy:
+                rrhhId:
                   type: integer
                   description: ID del usuario creador
                 categoryId:
@@ -105,58 +105,6 @@ paths:
       responses:
         '200':
           description: Gestión eliminada exitosamente
-  /api/managements/addKeywords/{id}:
-    put:
-      tags: [Gestiones]
-      summary: Agregar palabras clave a una gestión
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID de la gestión
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                keywords:
-                  type: array
-                  items:
-                    type: string
-                  description: Palabras clave a agregar
-      responses:
-        '200':
-          description: Palabras clave agregadas exitosamente
-  /api/managements/deleteKeywords/{id}:
-    put:
-      tags: [Gestiones]
-      summary: Eliminar palabras clave de una gestión
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID de la gestión
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                keywords:
-                  type: array
-                  items:
-                    type: string
-                  description: Palabras clave a eliminar
-      responses:
-        '200':
-          description: Palabras clave eliminadas exitosamente
   /api/managements/addFile/{id}:
     put:
       tags: [Gestiones]
@@ -244,10 +192,10 @@ paths:
                 name:
                   type: string
                   description: Nombre de la categoría
-                group:
-                  type: string
-                  description: Grupo de la categoría
-                createdBy:
+                groupId:
+                  type: integer
+                  description: ID del grupo de la categoría
+                rrhhId:
                   type: integer
                   description: ID del usuario creador
       responses:
@@ -293,9 +241,9 @@ paths:
                 name:
                   type: string
                   description: Nuevo nombre de la categoría
-                group:
-                  type: string
-                  description: Nuevo grupo de la categoría
+                groupId:
+                  type: integer
+                  description: Nuevo ID de grupo de la categoría
       responses:
         '200':
           description: Categoría actualizada exitosamente
@@ -323,9 +271,10 @@ paths:
             schema:
               type: object
               properties:
-                group:
-                  type: string
-                createdBy:
+                groupId:
+                  type: integer
+                  description: ID del grupo de la categoría
+                rrhhId:
                   type: integer
       responses:
         '200':
@@ -344,7 +293,7 @@ paths:
                 name:
                   type: string
                   description: Nombre a buscar (parcial o completo)
-                createdBy:
+                rrhhId:
                   type: integer
                   description: ID del usuario creador
       responses:
@@ -375,9 +324,9 @@ paths:
                 name:
                   type: string
                   description: Filtrar por nombre (opcional, búsqueda parcial)
-                group:
-                  type: string
-                  description: Filtrar por grupo (opcional)
+                groupId:
+                  type: integer
+                  description: Filtrar por ID de grupo (opcional)
       responses:
         200:
           description: Categorías paginadas
@@ -424,9 +373,9 @@ components:
           type: integer
         name:
           type: string
-        group:
-          type: string
-        createdBy:
+        groupId:
+          type: integer
+        rrhhId:
           type: integer
         createdAt:
           type: string
@@ -454,7 +403,7 @@ components:
           description: Palabras clave (array de strings)
         file:
           type: string
-        createdBy:
+        rrhhId:
           type: integer
         category:
           $ref: '#/components/schemas/Category'

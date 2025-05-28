@@ -19,10 +19,10 @@ export class Category extends BaseEntity {
   name: string;
 
   @Column()
-  group: string;
+  groupId: number;
 
-  @Column({ default: null })
-  createdBy: number;
+  @Column()
+  rrhhId: number;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
