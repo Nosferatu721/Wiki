@@ -19,13 +19,7 @@ export class Category extends BaseEntity {
   name: string;
 
   @Column()
-  grupo: string;
-
-  @Column()
-  sub_grupo: string;
-
-  @Column()
-  skill: string;
+  group: string;
 
   @Column({ default: null })
   createdBy: number;

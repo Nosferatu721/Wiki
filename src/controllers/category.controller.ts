@@ -4,17 +4,15 @@ import { Category } from '../entities/Category';
 
 export const createCategory = async (req: Request, res: Response) => {
   try {
-    const { name, grupo, sub_grupo, skill, createdBy } = req.body;
-    if (!name || !grupo || !sub_grupo || !skill || createdBy === undefined) {
+    const { name, group, createdBy } = req.body;
+    if (!name || !group || createdBy === undefined) {
       return res
         .status(400)
-        .json({ message: 'All fields (name, grupo, sub_grupo, skill, createdBy) are required' });
+        .json({ message: 'All fields (name, group, createdBy) are required' });
     }
     const category = new Category();
     category.name = name;
-    category.grupo = grupo;
-    category.sub_grupo = sub_grupo;
-    category.skill = skill;
+    category.group = group;
     category.createdBy = createdBy;
     const savedCategory = await category.save();
     return res.status(201).json(savedCategory);
@@ -77,14 +75,9 @@ export const getCategoryById = async (req: Request, res: Response) => {
 
 export const getCategoriesBySegmentation = async (req: Request, res: Response) => {
   try {
-    const { grupo, sub_grupo, skill, createdBy } = req.body;
-
+    const { group } = req.body;
     const query: any = {};
-    if (grupo) query.grupo = grupo;
-    if (sub_grupo) query.sub_grupo = sub_grupo;
-    if (skill) query.skill = skill;
-    if (createdBy !== undefined) query.createdBy = createdBy;
-
+    if (group) query.group = group;
     const categories = await Category.findBy(query);
     return res.status(200).json(categories);
   } catch (error) {
@@ -104,28 +97,6 @@ export const getCategoriesByName = async (req: Request, res: Response) => {
       where,
     });
     return res.status(200).json(categories);
-  } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
-  }
-};
-
-export const getCategoriesWithPagination = async (req: Request, res: Response) => {
-  try {
-    const { page = 1, limit = 10 } = req.body;
-    const skip = (Number(page) - 1) * Number(limit);
-    const [categories, total] = await Category.findAndCount({
-      skip: skip,
-      take: Number(limit),
-      order: {
-        name: 'ASC',
-      },
-    });
-    return res.status(200).json({
-      data: categories,
-      total: total,
-      page: Number(page),
-      lastPage: Math.ceil(total / Number(limit)),
-    });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error', error });
   }

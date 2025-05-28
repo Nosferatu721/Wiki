@@ -242,15 +242,9 @@ paths:
                 name:
                   type: string
                   description: Nombre de la categoría
-                grupo:
+                group:
                   type: string
                   description: Grupo de la categoría
-                sub_grupo:
-                  type: string
-                  description: Subgrupo de la categoría
-                skill:
-                  type: string
-                  description: Habilidad de la categoría
                 createdBy:
                   type: integer
                   description: ID del usuario creador
@@ -297,6 +291,9 @@ paths:
                 name:
                   type: string
                   description: Nuevo nombre de la categoría
+                group:
+                  type: string
+                  description: Nuevo grupo de la categoría
       responses:
         '200':
           description: Categoría actualizada exitosamente
@@ -324,11 +321,7 @@ paths:
             schema:
               type: object
               properties:
-                grupo:
-                  type: string
-                sub_grupo:
-                  type: string
-                skill:
+                group:
                   type: string
                 createdBy:
                   type: integer
@@ -380,11 +373,7 @@ components:
           type: integer
         name:
           type: string
-        grupo:
-          type: string
-        sub_grupo:
-          type: string
-        skill:
+        group:
           type: string
         createdBy:
           type: integer
