@@ -161,7 +161,7 @@ paths:
   /api/managements/pagination:
     post:
       tags: [Gestiones]
-      summary: Obtener gestiones con paginación
+      summary: Obtener gestiones con paginación y filtros de búsqueda
       parameters:
         - in: query
           name: page
@@ -173,9 +173,63 @@ paths:
           schema:
             type: integer
           description: Cantidad de resultados por página
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryId:
+                  type: integer
+                  description: ID de la categoría (opcional)
+                title:
+                  type: string
+                  description: Título de la gestión (opcional, búsqueda parcial)
+                description:
+                  type: string
+                  description: Descripción de la gestión (opcional, búsqueda parcial)
+                keywords:
+                  type: array
+                  items:
+                    type: string
+                  description: Palabras clave (opcional, array de strings)
       responses:
         200:
-          description: Gestiones paginadas
+          description: Gestiones paginadas y filtradas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  current_page:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Management'
+                  first_page_url:
+                    type: string
+                  from:
+                    type: integer
+                  last_page:
+                    type: integer
+                  last_page_url:
+                    type: string
+                  next_page_url:
+                    type: string
+                    nullable: true
+                  path:
+                    type: string
+                  per_page:
+                    type: integer
+                  prev_page_url:
+                    type: string
+                    nullable: true
+                  to:
+                    type: integer
+                  total:
+                    type: integer
 
   # --- Categories ---
   /api/categories:

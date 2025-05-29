@@ -198,13 +198,42 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
     if (isNaN(page) || page < 1) page = 1;
     if (isNaN(perPage) || perPage < 1) perPage = 5;
 
-    const [data, total] = await Management.findAndCount({
-      relations: ['category'],
-      where: { deletedAt: IsNull() },
-      skip: (page - 1) * perPage,
-      take: perPage,
-      order: { id: 'ASC' },
-    });
+    // Filtros opcionales desde req.body
+    const { categoryId, title, description, keywords } = req.body || {};
+    const where: any = { deletedAt: IsNull() };
+    if (categoryId) where.category = { id: categoryId };
+    if (title) where.title = Like(`%${title}%`);
+    if (description) where.description = Like(`%${description}%`);
+
+    let data: Management[] = [];
+    let total = 0;
+    if (keywords && Array.isArray(keywords) && keywords.length > 0) {
+      // QueryBuilder para filtrar por keywords
+      const qb = Management.createQueryBuilder('management')
+        .leftJoinAndSelect('management.category', 'category')
+        .where(where);
+      qb.andWhere(
+        keywords.map((_, i) => `JSON_CONTAINS(management.keywords, :kw${i})`).join(' OR '),
+        Object.fromEntries(keywords.map((kw, i) => [`kw${i}`, `"${kw}"`]))
+      );
+      qb.skip((page - 1) * perPage).take(perPage).orderBy('management.id', 'ASC');
+      data = await qb.getMany();
+      // Contar total con los mismos filtros
+      const countQb = Management.createQueryBuilder('management').where(where);
+      countQb.andWhere(
+        keywords.map((_, i) => `JSON_CONTAINS(management.keywords, :kw${i})`).join(' OR '),
+        Object.fromEntries(keywords.map((kw, i) => [`kw${i}`, `"${kw}"`]))
+      );
+      total = await countQb.getCount();
+    } else {
+      [data, total] = await Management.findAndCount({
+        relations: ['category'],
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+        order: { id: 'ASC' },
+      });
+    }
     const lastPage = Math.ceil(total / perPage);
     const baseUrl = req.protocol + '://' + req.get('host') + req.baseUrl + req.path;
     const makePageUrl = (p: number) => `${baseUrl}?page=${p}&perPage=${perPage}`;
