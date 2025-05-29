@@ -274,8 +274,6 @@ paths:
                 groupId:
                   type: integer
                   description: ID del grupo de la categoría
-                rrhhId:
-                  type: integer
       responses:
         '200':
           description: Categorías filtradas por segmentación
@@ -402,7 +400,10 @@ components:
             type: string
           description: Palabras clave (array de strings)
         file:
-          type: string
+          type: array
+          items:
+            type: string
+          description: Palabras clave (array de strings)
         rrhhId:
           type: integer
         category:

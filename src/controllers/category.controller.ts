@@ -22,15 +22,14 @@ export const createCategory = async (req: Request, res: Response) => {
 export const updateCategory = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, groupId } = req.body;
+    const { name } = req.body;
 
-    if (!name && groupId === undefined) return res.status(400).json({ message: 'At least one field (name or groupId) is required' });
+    if (!name === undefined) return res.status(400).json({ message: 'At least one field (name) is required' });
 
     const category = await Category.findOneBy({ id: parseInt(id) });
     if (!category) return res.status(404).json({ message: 'Category not found' });
 
     if (name) category.name = name;
-    if (groupId !== undefined) category.groupId = parseInt(groupId);
     const updatedCategory = await category.save();
     return res.status(200).json(updatedCategory);
   } catch (error) {

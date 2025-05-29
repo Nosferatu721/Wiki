@@ -25,7 +25,6 @@ export const createManagement = async (req: Request, res: Response) => {
     management.rrhhId = rrhhId;
     management.category = categoryId;
 
-    // Adapted: file as array (json)
     let fileArray = file;
     if (req.files && Array.isArray(req.files)) {
       fileArray = req.files.map((file: Express.Multer.File) => file.filename);
@@ -36,6 +35,8 @@ export const createManagement = async (req: Request, res: Response) => {
         fileArray = [file];
       }
     }
+
+    // TODO: Validate
     if (!Array.isArray(fileArray)) {
       return res.status(400).json({ message: 'File must be an array or a valid string/JSON' });
     }
@@ -66,7 +67,7 @@ export const createManagement = async (req: Request, res: Response) => {
 export const updateManagement = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, description, categoryId, keywords, file } = req.body;
+    const { title, description, categoryId, keywords } = req.body;
 
     if (!title || !categoryId) {
       return res.status(400).json({ message: 'Title, rrhhId, and categoryId are required fields' });
