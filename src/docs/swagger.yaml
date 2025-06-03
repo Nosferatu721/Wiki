@@ -158,6 +158,38 @@ paths:
       responses:
         '200':
           description: Archivos eliminados exitosamente
+  /api/managements/updateFiles/{id}:
+    put:
+      tags: [Gestiones]
+      summary: Agregar y/o eliminar archivos de una gestión existente (updateFiles)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la gestión
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Archivos a agregar (opcional)
+                filesToDelete:
+                  type: array
+                  items:
+                    type: string
+                  description: Nombres de archivos a eliminar (opcional)
+      responses:
+        '200':
+          description: Archivos actualizados exitosamente
   /api/managements/pagination:
     post:
       tags: [Gestiones]

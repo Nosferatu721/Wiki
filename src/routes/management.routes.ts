@@ -8,6 +8,7 @@ import {
   addFileToManagement,
   deleteFilesFromManagement,
   getManagementsPaginated,
+  updateFilesInManagement
 } from '../controllers/management.controller';
 import multer from 'multer';
 import path from 'path';
@@ -48,5 +49,8 @@ router.put('/deleteFile/:id', deleteFilesFromManagement);
 
 // Route to get paginated management entries
 router.post('/pagination', getManagementsPaginated);
+
+// Route to update files in an existing management entry
+router.put('/updateFiles/:id', upload.array('file', 5), updateFilesInManagement);
 
 export default router;

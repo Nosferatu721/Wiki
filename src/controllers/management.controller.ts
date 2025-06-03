@@ -172,6 +172,43 @@ export const deleteFilesFromManagement = async (req: Request, res: Response) => 
   }
 };
 
+// Add and/or delete files from a Management entry in a single request
+export const updateFilesInManagement = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const filesToDelete = req.body.filesToDelete;
+    // Buscar el registro primero
+    const management = await Management.findOneBy({ id: parseInt(id) });
+    if (!management) {
+      return res.status(404).json({ message: 'Management entry not found' });
+    }
+    let updatedFiles = Array.isArray(management.file) ? [...management.file] : [];
+
+    // Eliminar archivos si se especifican
+    if (filesToDelete && Array.isArray(filesToDelete) && filesToDelete.length > 0) {
+      for (const file of filesToDelete) {
+        const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', file);
+        fs.unlink(filePath, (err) => {
+          // Ignore error if file does not exist
+        });
+      }
+      updatedFiles = updatedFiles.filter((file) => !filesToDelete.includes(file));
+    }
+
+    // Agregar archivos si se suben
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      const filesArray = req.files.map((file: Express.Multer.File) => file.filename);
+      updatedFiles = [...updatedFiles, ...filesArray];
+    }
+
+    management.file = updatedFiles;
+    const updatedManagement = await management.save();
+    return res.status(200).json(updatedManagement);
+  } catch (error) {
+    return res.status(500).json({ message: 'Internal server error', error });
+  }
+};
+
 // Get all Management entries
 export const getManagements = async (req: Request, res: Response) => {
   try {
@@ -291,8 +328,18 @@ export const deleteManagement = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Management entry not found' });
     }
 
-    management.deletedAt = new Date();
-    await management.save();
+    // Eliminar archivos asociados
+    const files = Array.isArray(management.file) ? management.file : [];
+    for (const file of files) {
+      const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', file);
+      console.log(`Deleting file: ${filePath}`);
+      fs.unlink(filePath, (err) => {
+        // Ignorar error si el archivo no existe
+      });
+    }
+
+    // Eliminar registro de la base de datos (delete real)
+    await Management.remove(management);
     return res.status(200).send();
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error', error });

@@ -12,3 +12,5 @@ yarn-debug.log*
 .env
 
 uploads
+
+tareas_realizadas.txt
