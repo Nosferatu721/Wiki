@@ -111,8 +111,11 @@ export const getCategoriesPaginated = async (req: Request, res: Response) => {
     // Obtener filtros opcionales de req.body
     const { name, groupId } = req.body;
     const where: any = {};
-    if (name) where.name = Like(`%${name}%`);
-    if (groupId !== undefined) where.groupId = parseInt(groupId);
+    if (name && name.trim() !== "") where.name = Like(`%${name}%`);
+    if (groupId !== undefined && groupId !== null && groupId !== "") {
+      const parsedGroupId = parseInt(groupId);
+      if (!isNaN(parsedGroupId)) where.groupId = parsedGroupId;
+    }
 
     const [data, total] = await Category.findAndCount({
       where,

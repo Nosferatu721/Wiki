@@ -332,7 +332,6 @@ export const deleteManagement = async (req: Request, res: Response) => {
     const files = Array.isArray(management.file) ? management.file : [];
     for (const file of files) {
       const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', file);
-      console.log(`Deleting file: ${filePath}`);
       fs.unlink(filePath, (err) => {
         // Ignorar error si el archivo no existe
       });
