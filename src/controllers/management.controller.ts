@@ -36,13 +36,12 @@ export const createManagement = async (req: Request, res: Response) => {
       }
     }
 
-    // TODO: Validate
     if (!Array.isArray(fileArray)) {
       return res.status(400).json({ message: 'File must be an array or a valid string/JSON' });
     }
     management.file = fileArray;
 
-    // Adapted: keywords as array (json)
+    // Adapted: keywords as array (json) and lowercase
     let keywordsArray = keywords;
     if (typeof keywords === 'string') {
       try {
@@ -54,7 +53,9 @@ export const createManagement = async (req: Request, res: Response) => {
     if (!Array.isArray(keywordsArray)) {
       return res.status(400).json({ message: 'Keywords must be an array or a valid string/JSON' });
     }
-    management.keywords = keywordsArray;
+    management.keywords = keywordsArray.map((kw: string) =>
+      typeof kw === 'string' ? kw.toLowerCase() : kw
+    );
 
     const savedManagement = await management.save();
     return res.status(201).json(savedManagement);
@@ -69,14 +70,12 @@ export const updateManagement = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { title, description, categoryId, keywords } = req.body;
 
-    if (!title || !categoryId) {
-      return res.status(400).json({ message: 'Title, rrhhId, and categoryId are required fields' });
-    }
-
-    // Validate categoryId
-    const category = await Category.findOneBy({ id: categoryId });
-    if (!category) {
-      return res.status(404).json({ message: 'Category not found' });
+    // Validate categoryId if provided
+    if (!categoryId) {
+      const category = await Category.findOneBy({ id: categoryId });
+      if (!category) {
+        return res.status(404).json({ message: 'Category not found' });
+      }
     }
 
     const management = await Management.findOneBy({ id: parseInt(id) });
@@ -85,7 +84,7 @@ export const updateManagement = async (req: Request, res: Response) => {
     }
 
     management.title = title;
-    management.description = description || null;
+    management.description = description;
     management.category = categoryId;
 
     // Actualizar keywords si se envían
@@ -103,7 +102,9 @@ export const updateManagement = async (req: Request, res: Response) => {
           .status(400)
           .json({ message: 'Keywords must be an array or a valid string/JSON' });
       }
-      management.keywords = keywordsArray;
+      management.keywords = keywordsArray.map((kw: string) =>
+        typeof kw === 'string' ? kw.toLowerCase() : kw
+      );
     }
 
     const updatedManagement = await management.save();
@@ -176,7 +177,16 @@ export const deleteFilesFromManagement = async (req: Request, res: Response) => 
 export const updateFilesInManagement = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const filesToDelete = req.body.filesToDelete;
+    let filesToDelete = req.body.filesToDelete;
+
+    // Pasar filesToDelete a un array si es una cadena
+    if (typeof filesToDelete === 'string') {
+      try {
+        filesToDelete = JSON.parse(filesToDelete);
+      } catch {
+        filesToDelete = [filesToDelete];
+      }
+    }
     // Buscar el registro primero
     const management = await Management.findOneBy({ id: parseInt(id) });
     if (!management) {
@@ -227,7 +237,7 @@ export const getManagements = async (req: Request, res: Response) => {
   }
 };
 
-// Obtener gestiones con paginación estilo Laravel
+// Obtener gestiones con paginación
 export const getManagementsPaginated = async (req: Request, res: Response) => {
   try {
     let page = parseInt(req.query.page as string);
@@ -245,21 +255,29 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
     let data: Management[] = [];
     let total = 0;
     if (keywords && Array.isArray(keywords) && keywords.length > 0) {
+      // Convertir keywords a minúsculas
+      const lowerKeywords = keywords.map((kw: string) => kw.toLowerCase());
       // QueryBuilder para filtrar por keywords
       const qb = Management.createQueryBuilder('management')
         .leftJoinAndSelect('management.category', 'category')
         .where(where);
       qb.andWhere(
-        keywords.map((_, i) => `JSON_CONTAINS(management.keywords, :kw${i})`).join(' OR '),
-        Object.fromEntries(keywords.map((kw, i) => [`kw${i}`, `"${kw}"`]))
+        lowerKeywords
+          .map((_, i) => `JSON_CONTAINS(LOWER(JSON_EXTRACT(management.keywords, '$[*]')), :kw${i})`)
+          .join(' OR '),
+        Object.fromEntries(lowerKeywords.map((kw, i) => [`kw${i}`, `\"${kw}\"`]))
       );
-      qb.skip((page - 1) * perPage).take(perPage).orderBy('management.id', 'ASC');
+      qb.skip((page - 1) * perPage)
+        .take(perPage)
+        .orderBy('management.id', 'ASC');
       data = await qb.getMany();
       // Contar total con los mismos filtros
       const countQb = Management.createQueryBuilder('management').where(where);
       countQb.andWhere(
-        keywords.map((_, i) => `JSON_CONTAINS(management.keywords, :kw${i})`).join(' OR '),
-        Object.fromEntries(keywords.map((kw, i) => [`kw${i}`, `"${kw}"`]))
+        lowerKeywords
+          .map((_, i) => `JSON_CONTAINS(LOWER(JSON_EXTRACT(management.keywords, '$[*]')), :kw${i})`)
+          .join(' OR '),
+        Object.fromEntries(lowerKeywords.map((kw, i) => [`kw${i}`, `\"${kw}\"`]))
       );
       total = await countQb.getCount();
     } else {
