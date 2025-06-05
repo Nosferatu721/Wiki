@@ -10,7 +10,7 @@ paths:
   /api/managements:
     post:
       tags: [Gestiones]
-      summary: Crear una nueva gestión
+      summary: "Crear una nueva gestión"
       consumes:
         - multipart/form-data
       requestBody:
@@ -48,14 +48,14 @@ paths:
           description: Gestión creada exitosamente
     get:
       tags: [Gestiones]
-      summary: Obtener todas las gestiones
+      summary: "Obtener todas las gestiones"
       responses:
         '200':
           description: Lista de gestiones
   /api/managements/{id}:
     put:
       tags: [Gestiones]
-      summary: Actualizar una gestión existente
+      summary: "Actualizar una gestión existente"
       parameters:
         - in: path
           name: id
@@ -81,7 +81,7 @@ paths:
           description: Gestión actualizada exitosamente
     get:
       tags: [Gestiones]
-      summary: Obtener una gestión por ID
+      summary: "Obtener una gestión por ID"
       parameters:
         - in: path
           name: id
@@ -94,7 +94,7 @@ paths:
           description: Gestión encontrada
     delete:
       tags: [Gestiones]
-      summary: Eliminar (soft delete) una gestión
+      summary: "Eliminar (soft delete) una gestión"
       parameters:
         - in: path
           name: id
@@ -108,7 +108,7 @@ paths:
   /api/managements/addFile/{id}:
     put:
       tags: [Gestiones]
-      summary: Agregar archivos a una gestión existente
+      summary: "Agregar archivos a una gestión existente"
       parameters:
         - in: path
           name: id
@@ -135,7 +135,7 @@ paths:
   /api/managements/deleteFile/{id}:
     put:
       tags: [Gestiones]
-      summary: Eliminar archivos de una gestión existente
+      summary: "Eliminar archivos de una gestión existente"
       parameters:
         - in: path
           name: id
@@ -161,7 +161,7 @@ paths:
   /api/managements/updateFiles/{id}:
     put:
       tags: [Gestiones]
-      summary: Agregar y/o eliminar archivos de una gestión existente (updateFiles)
+      summary: "Agregar y/o eliminar archivos de una gestión existente (updateFiles)"
       parameters:
         - in: path
           name: id
@@ -193,7 +193,7 @@ paths:
   /api/managements/pagination:
     post:
       tags: [Gestiones]
-      summary: Obtener gestiones con paginación y filtros de búsqueda
+      summary: "Obtener gestiones con paginación y filtros de búsqueda"
       parameters:
         - in: query
           name: page
@@ -267,7 +267,7 @@ paths:
   /api/categories:
     post:
       tags: [Categorías]
-      summary: Crear una nueva categoría
+      summary: "Crear una nueva categoría"
       requestBody:
         required: true
         content:
@@ -289,14 +289,20 @@ paths:
           description: Categoría creada exitosamente
     get:
       tags: [Categorías]
-      summary: Obtener todas las categorías
+      summary: "Obtener todas las categorías (opcional: filtrar por groupId)"
+      parameters:
+        - in: query
+          name: groupId
+          schema:
+            type: integer
+          description: Filtrar por ID de grupo (opcional)
       responses:
         '200':
           description: Lista de categorías
   /api/categories/{id}:
     get:
       tags: [Categorías]
-      summary: Obtener una categoría por ID
+      summary: "Obtener una categoría por ID (opcional: filtrar por groupId)"
       parameters:
         - in: path
           name: id
@@ -304,12 +310,17 @@ paths:
           schema:
             type: integer
           description: ID de la categoría
+        - in: query
+          name: groupId
+          schema:
+            type: integer
+          description: Filtrar por ID de grupo (opcional)
       responses:
         '200':
           description: Categoría encontrada
     put:
       tags: [Categorías]
-      summary: Actualizar una categoría por ID
+      summary: "Actualizar una categoría por ID"
       parameters:
         - in: path
           name: id
@@ -335,7 +346,7 @@ paths:
           description: Categoría actualizada exitosamente
     delete:
       tags: [Categorías]
-      summary: Eliminar una categoría por ID
+      summary: "Eliminar una categoría por ID"
       parameters:
         - in: path
           name: id
@@ -349,7 +360,7 @@ paths:
   /api/categories/filterSegmentation:
     post:
       tags: [Categorías]
-      summary: Obtener categorías por segmentación
+      summary: "Obtener categorías por segmentación"
       requestBody:
         required: true
         content:
@@ -366,7 +377,7 @@ paths:
   /api/categories/filterName:
     post:
       tags: [Categorías]
-      summary: Obtener categorías por nombre
+      summary: "Obtener categorías por nombre (opcional: filtrar por groupId)"
       requestBody:
         required: true
         content:
@@ -380,13 +391,16 @@ paths:
                 rrhhId:
                   type: integer
                   description: ID del usuario creador
+                groupId:
+                  type: integer
+                  description: ID del grupo de la categoría (opcional)
       responses:
         '200':
           description: Categorías filtradas por nombre
   /api/categories/pagination:
     post:
       tags: [Categorías]
-      summary: Obtener categorías con paginación y filtros opcionales
+      summary: "Obtener categorías con paginación y filtros opcionales"
       parameters:
         - in: query
           name: page

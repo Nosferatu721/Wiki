@@ -53,7 +53,13 @@ export const deleteCategory = async (req: Request, res: Response) => {
 
 export const getCategories = async (req: Request, res: Response) => {
   try {
-    const categories = await Category.find();
+    const { groupId } = req.query;
+    const where: any = {};
+    if (groupId !== undefined && groupId !== null && groupId !== "") {
+      const parsedGroupId = parseInt(groupId as string);
+      if (!isNaN(parsedGroupId)) where.groupId = parsedGroupId;
+    }
+    const categories = await Category.find({ where });
     return res.status(200).json(categories);
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error', error });
@@ -63,7 +69,13 @@ export const getCategories = async (req: Request, res: Response) => {
 export const getCategoryById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const category = await Category.findOneBy({ id: parseInt(id) });
+    const { groupId } = req.query;
+    const where: any = { id: parseInt(id) };
+    if (groupId !== undefined && groupId !== null && groupId !== "") {
+      const parsedGroupId = parseInt(groupId as string);
+      if (!isNaN(parsedGroupId)) where.groupId = parsedGroupId;
+    }
+    const category = await Category.findOneBy(where);
     if (!category) return res.status(404).json({ message: 'Category not found' });
     return res.status(200).json(category);
   } catch (error) {
@@ -85,11 +97,15 @@ export const getCategoriesBySegmentation = async (req: Request, res: Response) =
 
 export const getCategoriesByName = async (req: Request, res: Response) => {
   try {
-    const { name, rrhhId } = req.body;
+    const { name, rrhhId, groupId } = req.body;
     if (!name) return res.status(400).json({ message: 'Name query parameter is required' });
 
     const where: any = { name: Like(`%${name}%`) };
     if (rrhhId !== undefined) where.rrhhId = rrhhId;
+    if (groupId !== undefined && groupId !== null && groupId !== "") {
+      const parsedGroupId = parseInt(groupId);
+      if (!isNaN(parsedGroupId)) where.groupId = parsedGroupId;
+    }
 
     const categories = await Category.find({
       where,
