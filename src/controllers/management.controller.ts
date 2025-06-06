@@ -269,7 +269,7 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
       );
       qb.skip((page - 1) * perPage)
         .take(perPage)
-        .orderBy('management.id', 'ASC');
+        .orderBy('management.id', 'DESC');
       data = await qb.getMany();
       // Contar total con los mismos filtros
       const countQb = Management.createQueryBuilder('management').where(where);
@@ -286,7 +286,7 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
         where,
         skip: (page - 1) * perPage,
         take: perPage,
-        order: { id: 'ASC' },
+        order: { id: 'DESC' },
       });
     }
     const lastPage = Math.ceil(total / perPage);

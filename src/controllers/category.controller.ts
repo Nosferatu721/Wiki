@@ -137,7 +137,7 @@ export const getCategoriesPaginated = async (req: Request, res: Response) => {
       where,
       skip: (page - 1) * perPage,
       take: perPage,
-      order: { id: 'ASC' },
+      order: { id: 'DESC' },
     });
     const lastPage = Math.ceil(total / perPage);
     const baseUrl = req.protocol + '://' + req.get('host') + req.baseUrl + req.path;
