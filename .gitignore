@@ -11,6 +11,7 @@ yarn-debug.log*
 # Environment variables
 .env
 
-uploads
+uploads/management/*
+!uploads/management/Prueba/
 
 tareas_realizadas.txt
