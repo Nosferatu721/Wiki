@@ -10,6 +10,9 @@ import managementRoutes from './routes/management.routes';
 
 const app = express();
 
+// Confía en el proxy para obtener el protocolo real (http/https)
+app.set('trust proxy', true);
+
 app.use(cors());
 app.use(morgan('dev'));
 
