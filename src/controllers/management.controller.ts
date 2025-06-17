@@ -25,14 +25,27 @@ export const createManagement = async (req: Request, res: Response) => {
     management.rrhhId = rrhhId;
     management.category = categoryId;
 
-    let fileArray = file;
+    let fileArray: { nombre: string; url: string }[] = [];
     if (req.files && Array.isArray(req.files)) {
-      fileArray = req.files.map((file: Express.Multer.File) => file.filename);
+      const serverUrl = req.protocol + '://' + req.get('host');
+      fileArray = req.files.map((file: Express.Multer.File) => ({
+        nombre: file.originalname,
+        url: `${serverUrl}/uploads/management/${file.filename}`
+      }));
     } else if (typeof file === 'string') {
       try {
-        fileArray = JSON.parse(file);
+        const parsed = JSON.parse(file);
+        if (Array.isArray(parsed)) {
+          fileArray = parsed.map((f: any) =>
+            typeof f === 'object' && f.nombre && f.url
+              ? { nombre: f.nombre, url: f.url }
+              : { nombre: f, url: f }
+          );
+        } else {
+          fileArray = [{ nombre: parsed, url: parsed }];
+        }
       } catch {
-        fileArray = [file];
+        fileArray = [{ nombre: file, url: file }];
       }
     }
 
@@ -107,8 +120,47 @@ export const updateManagement = async (req: Request, res: Response) => {
       );
     }
 
-    const updatedManagement = await management.save();
-    return res.status(200).json(updatedManagement);
+    // --- NUEVO: Manejo de archivos nuevos y archivos a eliminar desde formdata ---
+    let filesToDelete = req.body.filesToDelete;
+    if (typeof filesToDelete === 'string') {
+      try {
+        filesToDelete = JSON.parse(filesToDelete);
+      } catch {
+        filesToDelete = [filesToDelete];
+      }
+    }
+    let currentFiles: { nombre: string; url: string }[] = Array.isArray(management.file) ? [...management.file] : [];
+    // Eliminar archivos si se especifican
+    if (filesToDelete && Array.isArray(filesToDelete) && filesToDelete.length > 0) {
+      for (const fileObj of filesToDelete) {
+        let fileName = typeof fileObj === 'object' && fileObj.url ? path.basename(fileObj.url) : fileObj;
+        fileName = fileName.split('management/')[1];
+        const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', fileName);
+        fs.unlink(filePath, (err) => {
+          // Ignorar error si el archivo no existe
+        });
+      }
+      currentFiles = currentFiles.filter((fileObj) =>
+        !filesToDelete.some((del) =>
+          (typeof del === 'object' && del.url && del.url === fileObj.url) ||
+          (typeof del === 'string' && del === fileObj.url)
+        )
+      );
+    }
+    // Agregar archivos nuevos si se suben
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      const serverUrl = req.protocol + '://' + req.get('host');
+      const newFiles: { nombre: string; url: string }[] = req.files.map((file: Express.Multer.File) => ({
+        nombre: file.originalname,
+        url: `${serverUrl}/uploads/management/${file.filename}`
+      }));
+      currentFiles = [...currentFiles, ...newFiles];
+    }
+    management.file = currentFiles;
+    // --- FIN ajuste archivos ---
+
+    await management.save();
+    return res.status(200).send();
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error', error });
   }
@@ -127,7 +179,11 @@ export const addFileToManagement = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
-    const filesArray = req.files.map((file: Express.Multer.File) => file.filename);
+    const serverUrl = req.protocol + '://' + req.get('host');
+    const filesArray = req.files.map((file: Express.Multer.File) => ({
+      nombre: file.originalname,
+      url: `${serverUrl}/uploads/management/${file.filename}`
+    }));
     management.file = Array.isArray(management.file)
       ? [...management.file, ...filesArray]
       : filesArray;
@@ -153,18 +209,30 @@ export const deleteFilesFromManagement = async (req: Request, res: Response) => 
     }
 
     const filesToDelete = req.body.files;
-    const existingFiles = Array.isArray(management.file) ? management.file : [];
+    const existingFiles: { nombre: string; url: string }[] = Array.isArray(management.file) ? management.file : [];
 
     // Delete files from filesystem
-    for (const file of filesToDelete) {
-      const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', file);
+    for (const fileObj of filesToDelete) {
+      const fileName = typeof fileObj === 'object' && fileObj.url ? path.basename(fileObj.url) : fileObj;
+      const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', fileName);
       console.log(`Deleting file: ${filePath}`);
       fs.unlink(filePath, (err) => {
         // Ignore error if file does not exist
       });
     }
 
-    management.file = existingFiles.filter((file) => !filesToDelete.includes(file));
+    interface FileObject {
+      nombre: string;
+      url: string;
+    }
+    type FileToDelete = string | { url: string };
+
+    management.file = existingFiles.filter((fileObj: FileObject) =>
+      !filesToDelete.some((del: FileToDelete) =>
+      (typeof del === 'object' && del.url && del.url === fileObj.url) ||
+      (typeof del === 'string' && del === fileObj.url)
+      )
+    );
 
     const updatedManagement = await management.save();
     return res.status(200).json(updatedManagement);
@@ -192,7 +260,7 @@ export const updateFilesInManagement = async (req: Request, res: Response) => {
     if (!management) {
       return res.status(404).json({ message: 'Management entry not found' });
     }
-    let updatedFiles = Array.isArray(management.file) ? [...management.file] : [];
+    let updatedFiles: { nombre: string; url: string }[] = Array.isArray(management.file) ? [...management.file] : [];
 
     // Eliminar archivos si se especifican
     if (filesToDelete && Array.isArray(filesToDelete) && filesToDelete.length > 0) {
@@ -207,7 +275,10 @@ export const updateFilesInManagement = async (req: Request, res: Response) => {
 
     // Agregar archivos si se suben
     if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-      const filesArray = req.files.map((file: Express.Multer.File) => file.filename);
+      const filesArray: { nombre: string; url: string }[] = req.files.map((file: Express.Multer.File) => ({
+        nombre: file.originalname,
+        url: file.path.replace(/\\/g, '/')
+      }));
       updatedFiles = [...updatedFiles, ...filesArray];
     }
 
@@ -347,9 +418,10 @@ export const deleteManagement = async (req: Request, res: Response) => {
     }
 
     // Eliminar archivos asociados
-    const files = Array.isArray(management.file) ? management.file : [];
-    for (const file of files) {
-      const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', file);
+    const files: { nombre: string; url: string }[] = Array.isArray(management.file) ? management.file : [];
+    for (const fileObj of files) {
+      const fileName = typeof fileObj === 'object' && fileObj.url ? path.basename(fileObj.url) : String(fileObj);
+      const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', fileName);
       fs.unlink(filePath, (err) => {
         // Ignorar error si el archivo no existe
       });

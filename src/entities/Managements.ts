@@ -26,7 +26,7 @@ export class Management extends BaseEntity {
   keywords: string[];
 
   @Column({ type: 'json', nullable: true })
-  file: string[];
+  file: { nombre: string; url: string }[];
 
   @Column()
   rrhhId: number;

@@ -30,7 +30,7 @@ const upload = multer({ storage });
 router.post('/', upload.array('file', 5), createManagement);
 
 // Route to update an existing management entry
-router.put('/:id', updateManagement);
+router.put('/:id', upload.array('file', 5), updateManagement);
 
 // Route to get all management entries
 router.get('/', getManagements);

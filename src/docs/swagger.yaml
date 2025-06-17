@@ -56,6 +56,8 @@ paths:
     put:
       tags: [Gestiones]
       summary: "Actualizar una gestión existente"
+      consumes:
+        - multipart/form-data
       parameters:
         - in: path
           name: id
@@ -66,7 +68,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -76,6 +78,22 @@ paths:
                   type: string
                 categoryId:
                   type: integer
+                keywords:
+                  type: array
+                  items:
+                    type: string
+                  description: Palabras clave (array de strings)
+                filesToDelete:
+                  type: array
+                  items:
+                    type: string
+                  description: Nombres o URLs de archivos a eliminar (array de strings)
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Archivos nuevos a agregar (opcional)
       responses:
         '200':
           description: Gestión actualizada exitosamente
@@ -502,8 +520,15 @@ components:
         file:
           type: array
           items:
-            type: string
-          description: Palabras clave (array de strings)
+            type: object
+            properties:
+              nombre:
+                type: string
+                description: Nombre original del archivo
+              url:
+                type: string
+                description: URL completa para acceder al archivo
+          description: Lista de archivos asociados (cada uno con nombre y url)
         rrhhId:
           type: integer
         category:
