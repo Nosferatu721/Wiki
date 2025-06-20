@@ -1,6 +1,12 @@
 # Usa una imagen oficial de Node.js
 FROM node:22
 
+# Instala LibreOffice y dependencias necesarias
+RUN apt-get update && \
+    apt-get install -y libreoffice && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Establece el directorio de trabajo
 WORKDIR /app
 

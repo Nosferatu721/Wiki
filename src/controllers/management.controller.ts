@@ -27,6 +27,19 @@ export const createManagement = async (req: Request, res: Response) => {
 
     let fileArray: { nombre: string; url: string }[] = [];
     if (req.files && Array.isArray(req.files)) {
+      // Validar tipos de archivo permitidos
+      const allowedExtensions = [
+        '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx',
+        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
+        '.mp4', '.avi', '.mov', '.wmv', '.mkv', '.pdf'
+      ];
+      const invalidFiles = req.files.filter((file: Express.Multer.File) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        return !allowedExtensions.includes(ext);
+      });
+      if (invalidFiles.length > 0) {
+        return res.status(400).json({ message: 'Solo se permiten archivos de Word, PowerPoint, Excel, imágenes, video y PDF.' });
+      }
       const serverUrl = req.protocol + '://' + req.get('host');
       fileArray = req.files.map((file: Express.Multer.File) => ({
         nombre: file.originalname,
@@ -149,6 +162,19 @@ export const updateManagement = async (req: Request, res: Response) => {
     }
     // Agregar archivos nuevos si se suben
     if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      // Validar tipos de archivo permitidos
+      const allowedExtensions = [
+        '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx',
+        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp',
+        '.mp4', '.avi', '.mov', '.wmv', '.mkv', '.pdf'
+      ];
+      const invalidFiles = req.files.filter((file: Express.Multer.File) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        return !allowedExtensions.includes(ext);
+      });
+      if (invalidFiles.length > 0) {
+        return res.status(400).json({ message: 'Solo se permiten archivos de Word, PowerPoint, Excel, imágenes, video y PDF.' });
+      }
       const serverUrl = req.protocol + '://' + req.get('host');
       const newFiles: { nombre: string; url: string }[] = req.files.map((file: Express.Multer.File) => ({
         nombre: file.originalname,
