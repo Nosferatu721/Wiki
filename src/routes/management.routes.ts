@@ -10,7 +10,7 @@ import {
   getManagementsPaginated,
   updateFilesInManagement
 } from '../controllers/management.controller';
-import { convertServerFileWithLibreOffice } from '../controllers/word.controller';
+import { convertServerFileWithLibreOffice, convertBlobWithLibreOffice } from '../controllers/word.controller';
 import multer from 'multer';
 import path from 'path';
 
@@ -54,7 +54,10 @@ router.post('/pagination', getManagementsPaginated);
 // Route to update files in an existing management entry
 router.put('/updateFiles/:id', upload.array('file', 5), updateFilesInManagement);
 
-// Endpoint para convertir Word a HTML
+// Endpoint para convertir Word  a PDF usando LibreOffice
 router.post('/convert-word', upload.single('file'), convertServerFileWithLibreOffice);
+
+// Endpoint para convertir un blob de Word a PDF usando LibreOffice
+router.post('/convert-blob', upload.single('file'), convertBlobWithLibreOffice);
 
 export default router;

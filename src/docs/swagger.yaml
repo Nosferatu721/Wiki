@@ -479,6 +479,54 @@ paths:
                     type: integer
                   total:
                     type: integer
+  /api/managements/convert-word:
+    post:
+      tags: [Gestiones]
+      summary: "Convertir un archivo Word (ya subido) a PDF usando LibreOffice"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                gestionId:
+                  type: integer
+                  description: ID de la gestión
+                url:
+                  type: string
+                  description: URL exacta del archivo a convertir
+      responses:
+        '200':
+          description: PDF generado y descargado
+        '404':
+          description: Gestión o archivo no encontrado
+        '500':
+          description: Error al convertir el archivo
+  /api/managements/convert-blob:
+    post:
+      tags: [Gestiones]
+      summary: "Convertir un archivo Word enviado como blob a PDF usando LibreOffice"
+      consumes:
+        - multipart/form-data
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Archivo Word a convertir
+      responses:
+        '200':
+          description: PDF generado y descargado
+        '400':
+          description: No se subió archivo
+        '500':
+          description: Error al convertir el archivo
 
 components:
   schemas:
