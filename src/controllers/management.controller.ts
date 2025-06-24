@@ -5,6 +5,28 @@ import { Category } from '../entities/Category';
 import fs from 'fs';
 import path from 'path';
 
+const allowedExtensions = [
+  '.doc',
+  '.docx',
+  '.ppt',
+  '.pptx',
+  '.xls',
+  '.xlsx',
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.bmp',
+  '.webp',
+  '.svg',
+  '.mp4',
+  '.avi',
+  '.mov',
+  '.wmv',
+  '.mkv',
+  '.pdf',
+];
+
 export const createManagement = async (req: Request, res: Response) => {
   try {
     const { title, description, keywords, file, rrhhId, categoryId } = req.body;
@@ -28,22 +50,21 @@ export const createManagement = async (req: Request, res: Response) => {
     let fileArray: { nombre: string; url: string }[] = [];
     if (req.files && Array.isArray(req.files)) {
       // Validar tipos de archivo permitidos
-      const allowedExtensions = [
-        '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx',
-        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
-        '.mp4', '.avi', '.mov', '.wmv', '.mkv', '.pdf'
-      ];
       const invalidFiles = req.files.filter((file: Express.Multer.File) => {
         const ext = path.extname(file.originalname).toLowerCase();
         return !allowedExtensions.includes(ext);
       });
       if (invalidFiles.length > 0) {
-        return res.status(400).json({ message: 'Solo se permiten archivos de Word, PowerPoint, Excel, imágenes, video y PDF.' });
+        return res
+          .status(400)
+          .json({
+            message: 'Solo se permiten archivos de Word, PowerPoint, Excel, imágenes, video y PDF.',
+          });
       }
       const serverUrl = req.protocol + '://' + req.get('host');
       fileArray = req.files.map((file: Express.Multer.File) => ({
         nombre: file.originalname,
-        url: `${serverUrl}/uploads/management/${file.filename}`
+        url: `${serverUrl}/uploads/management/${file.filename}`,
       }));
     } else if (typeof file === 'string') {
       try {
@@ -142,44 +163,50 @@ export const updateManagement = async (req: Request, res: Response) => {
         filesToDelete = [filesToDelete];
       }
     }
-    let currentFiles: { nombre: string; url: string }[] = Array.isArray(management.file) ? [...management.file] : [];
+    let currentFiles: { nombre: string; url: string }[] = Array.isArray(management.file)
+      ? [...management.file]
+      : [];
     // Eliminar archivos si se especifican
     if (filesToDelete && Array.isArray(filesToDelete) && filesToDelete.length > 0) {
       for (const fileObj of filesToDelete) {
-        let fileName = typeof fileObj === 'object' && fileObj.url ? path.basename(fileObj.url) : fileObj;
+        let fileName =
+          typeof fileObj === 'object' && fileObj.url ? path.basename(fileObj.url) : fileObj;
         fileName = fileName.split('management/')[1];
         const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', fileName);
         fs.unlink(filePath, (err) => {
           // Ignorar error si el archivo no existe
         });
       }
-      currentFiles = currentFiles.filter((fileObj) =>
-        !filesToDelete.some((del) =>
-          (typeof del === 'object' && del.url && del.url === fileObj.url) ||
-          (typeof del === 'string' && del === fileObj.url)
-        )
+      currentFiles = currentFiles.filter(
+        (fileObj) =>
+          !filesToDelete.some(
+            (del) =>
+              (typeof del === 'object' && del.url && del.url === fileObj.url) ||
+              (typeof del === 'string' && del === fileObj.url)
+          )
       );
     }
     // Agregar archivos nuevos si se suben
     if (req.files && Array.isArray(req.files) && req.files.length > 0) {
       // Validar tipos de archivo permitidos
-      const allowedExtensions = [
-        '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx',
-        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp',
-        '.mp4', '.avi', '.mov', '.wmv', '.mkv', '.pdf'
-      ];
       const invalidFiles = req.files.filter((file: Express.Multer.File) => {
         const ext = path.extname(file.originalname).toLowerCase();
         return !allowedExtensions.includes(ext);
       });
       if (invalidFiles.length > 0) {
-        return res.status(400).json({ message: 'Solo se permiten archivos de Word, PowerPoint, Excel, imágenes, video y PDF.' });
+        return res
+          .status(400)
+          .json({
+            message: 'Solo se permiten archivos de Word, PowerPoint, Excel, imágenes, video y PDF.',
+          });
       }
       const serverUrl = req.protocol + '://' + req.get('host');
-      const newFiles: { nombre: string; url: string }[] = req.files.map((file: Express.Multer.File) => ({
-        nombre: file.originalname,
-        url: `${serverUrl}/uploads/management/${file.filename}`
-      }));
+      const newFiles: { nombre: string; url: string }[] = req.files.map(
+        (file: Express.Multer.File) => ({
+          nombre: file.originalname,
+          url: `${serverUrl}/uploads/management/${file.filename}`,
+        })
+      );
       currentFiles = [...currentFiles, ...newFiles];
     }
     management.file = currentFiles;
@@ -208,7 +235,7 @@ export const addFileToManagement = async (req: Request, res: Response) => {
     const serverUrl = req.protocol + '://' + req.get('host');
     const filesArray = req.files.map((file: Express.Multer.File) => ({
       nombre: file.originalname,
-      url: `${serverUrl}/uploads/management/${file.filename}`
+      url: `${serverUrl}/uploads/management/${file.filename}`,
     }));
     management.file = Array.isArray(management.file)
       ? [...management.file, ...filesArray]
@@ -235,11 +262,14 @@ export const deleteFilesFromManagement = async (req: Request, res: Response) => 
     }
 
     const filesToDelete = req.body.files;
-    const existingFiles: { nombre: string; url: string }[] = Array.isArray(management.file) ? management.file : [];
+    const existingFiles: { nombre: string; url: string }[] = Array.isArray(management.file)
+      ? management.file
+      : [];
 
     // Delete files from filesystem
     for (const fileObj of filesToDelete) {
-      const fileName = typeof fileObj === 'object' && fileObj.url ? path.basename(fileObj.url) : fileObj;
+      const fileName =
+        typeof fileObj === 'object' && fileObj.url ? path.basename(fileObj.url) : fileObj;
       const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', fileName);
       console.log(`Deleting file: ${filePath}`);
       fs.unlink(filePath, (err) => {
@@ -253,11 +283,13 @@ export const deleteFilesFromManagement = async (req: Request, res: Response) => 
     }
     type FileToDelete = string | { url: string };
 
-    management.file = existingFiles.filter((fileObj: FileObject) =>
-      !filesToDelete.some((del: FileToDelete) =>
-      (typeof del === 'object' && del.url && del.url === fileObj.url) ||
-      (typeof del === 'string' && del === fileObj.url)
-      )
+    management.file = existingFiles.filter(
+      (fileObj: FileObject) =>
+        !filesToDelete.some(
+          (del: FileToDelete) =>
+            (typeof del === 'object' && del.url && del.url === fileObj.url) ||
+            (typeof del === 'string' && del === fileObj.url)
+        )
     );
 
     const updatedManagement = await management.save();
@@ -286,7 +318,9 @@ export const updateFilesInManagement = async (req: Request, res: Response) => {
     if (!management) {
       return res.status(404).json({ message: 'Management entry not found' });
     }
-    let updatedFiles: { nombre: string; url: string }[] = Array.isArray(management.file) ? [...management.file] : [];
+    let updatedFiles: { nombre: string; url: string }[] = Array.isArray(management.file)
+      ? [...management.file]
+      : [];
 
     // Eliminar archivos si se especifican
     if (filesToDelete && Array.isArray(filesToDelete) && filesToDelete.length > 0) {
@@ -301,10 +335,12 @@ export const updateFilesInManagement = async (req: Request, res: Response) => {
 
     // Agregar archivos si se suben
     if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-      const filesArray: { nombre: string; url: string }[] = req.files.map((file: Express.Multer.File) => ({
-        nombre: file.originalname,
-        url: file.path.replace(/\\/g, '/')
-      }));
+      const filesArray: { nombre: string; url: string }[] = req.files.map(
+        (file: Express.Multer.File) => ({
+          nombre: file.originalname,
+          url: file.path.replace(/\\/g, '/'),
+        })
+      );
       updatedFiles = [...updatedFiles, ...filesArray];
     }
 
@@ -444,9 +480,12 @@ export const deleteManagement = async (req: Request, res: Response) => {
     }
 
     // Eliminar archivos asociados
-    const files: { nombre: string; url: string }[] = Array.isArray(management.file) ? management.file : [];
+    const files: { nombre: string; url: string }[] = Array.isArray(management.file)
+      ? management.file
+      : [];
     for (const fileObj of files) {
-      const fileName = typeof fileObj === 'object' && fileObj.url ? path.basename(fileObj.url) : String(fileObj);
+      const fileName =
+        typeof fileObj === 'object' && fileObj.url ? path.basename(fileObj.url) : String(fileObj);
       const filePath = path.join(__dirname, '..', '..', 'uploads', 'management', fileName);
       fs.unlink(filePath, (err) => {
         // Ignorar error si el archivo no existe
