@@ -394,28 +394,62 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
     if (keywords && Array.isArray(keywords) && keywords.length > 0) {
       // Convertir keywords a minúsculas
       const lowerKeywords = keywords.map((kw: string) => kw.toLowerCase());
-      // QueryBuilder para filtrar por keywords
+      // QueryBuilder para filtrar principalmente por categoría y luego por keywords
       const qb = Management.createQueryBuilder('management')
-        .leftJoinAndSelect('management.category', 'category')
-        .where(where);
-      qb.andWhere(
-        lowerKeywords
-          .map((_, i) => `JSON_CONTAINS(LOWER(JSON_EXTRACT(management.keywords, '$[*]')), :kw${i})`)
-          .join(' OR '),
-        Object.fromEntries(lowerKeywords.map((kw, i) => [`kw${i}`, `\"${kw}\"`]))
-      );
+        .leftJoinAndSelect('management.category', 'category');
+      
+      // Aplicar filtros base (categoría, título, descripción)
+      if (categoryId !== null && !isNaN(categoryId)) {
+        qb.where('management.category = :categoryId', { categoryId });
+      } else {
+        qb.where('management.deletedAt IS NULL');
+      }
+      
+      if (title) {
+        qb.andWhere('management.title LIKE :title', { title: `%${title}%` });
+      }
+      
+      if (description) {
+        qb.andWhere('management.description LIKE :description', { description: `%${description}%` });
+      }
+      
+      // Aplicar filtro de keywords (cada keyword debe coincidir)
+      lowerKeywords.forEach((kw, i) => {
+        qb.andWhere(
+          `JSON_CONTAINS(LOWER(JSON_EXTRACT(management.keywords, '$[*]')), :kw${i})`,
+          { [`kw${i}`]: `\"${kw}\"` }
+        );
+      });
+      
       qb.skip((page - 1) * perPage)
         .take(perPage)
         .orderBy('management.id', 'DESC');
       data = await qb.getMany();
+      
       // Contar total con los mismos filtros
-      const countQb = Management.createQueryBuilder('management').where(where);
-      countQb.andWhere(
-        lowerKeywords
-          .map((_, i) => `JSON_CONTAINS(LOWER(JSON_EXTRACT(management.keywords, '$[*]')), :kw${i})`)
-          .join(' OR '),
-        Object.fromEntries(lowerKeywords.map((kw, i) => [`kw${i}`, `\"${kw}\"`]))
-      );
+      const countQb = Management.createQueryBuilder('management');
+      
+      if (categoryId !== null && !isNaN(categoryId)) {
+        countQb.where('management.category = :categoryId', { categoryId });
+      } else {
+        countQb.where('management.deletedAt IS NULL');
+      }
+      
+      if (title) {
+        countQb.andWhere('management.title LIKE :title', { title: `%${title}%` });
+      }
+      
+      if (description) {
+        countQb.andWhere('management.description LIKE :description', { description: `%${description}%` });
+      }
+      
+      lowerKeywords.forEach((kw, i) => {
+        countQb.andWhere(
+          `JSON_CONTAINS(LOWER(JSON_EXTRACT(management.keywords, '$[*]')), :kw${i})`,
+          { [`kw${i}`]: `\"${kw}\"` }
+        );
+      });
+      
       total = await countQb.getCount();
     } else {
       // Usar QueryBuilder para mayor control
@@ -446,6 +480,13 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
       ...m,
       keywords: Array.isArray(m.keywords) ? m.keywords : [],
     }));
+
+    let total_for_category = 0;
+    if (categoryId && !isNaN(categoryId)) {
+      const categoryCountQb = Management.createQueryBuilder('management')
+        .where({ category: { id: categoryId }, deletedAt: IsNull() });
+      total_for_category = await categoryCountQb.getCount();
+    }
     res.json({
       current_page: page,
       data: result,
@@ -459,6 +500,7 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
       prev_page_url: page > 1 ? makePageUrl(page - 1) : null,
       to: Math.min(page * perPage, total),
       total,
+      total_for_category
     });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error', error });
