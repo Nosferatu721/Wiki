@@ -151,12 +151,29 @@ export const getCategoriesPaginated = async (req: Request, res: Response) => {
       take: perPage,
       order: { id: 'DESC' },
     });
+
+    // Agregar total_management para cada categoría
+    const dataWithManagementCount = await Promise.all(
+      data.map(async (category) => {
+        let total_management = 0;
+        if (category.id && !isNaN(parseInt(category.id.toString()))) {
+          const categoryCountQb = Management.createQueryBuilder('management')
+            .where({ category: { id: category.id }, deletedAt: IsNull() });
+          total_management = await categoryCountQb.getCount();
+        }
+        return {
+          ...category,
+          total_management,
+        };
+      })
+    );
+
     const lastPage = Math.ceil(total / perPage);
     const baseUrl = req.protocol + '://' + req.get('host') + req.baseUrl + req.path;
     const makePageUrl = (p: number) => `${baseUrl}?page=${p}&perPage=${perPage}`;
     res.json({
       current_page: page,
-      data,
+      data: dataWithManagementCount,
       first_page_url: makePageUrl(1),
       from: (page - 1) * perPage + 1,
       last_page: lastPage,

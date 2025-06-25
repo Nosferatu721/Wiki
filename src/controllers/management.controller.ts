@@ -413,13 +413,19 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
         qb.andWhere('management.description LIKE :description', { description: `%${description}%` });
       }
       
-      // Aplicar filtro de keywords (cada keyword debe coincidir)
-      lowerKeywords.forEach((kw, i) => {
-        qb.andWhere(
-          `JSON_CONTAINS(LOWER(JSON_EXTRACT(management.keywords, '$[*]')), :kw${i})`,
-          { [`kw${i}`]: `\"${kw}\"` }
-        );
-      });
+      // Aplicar filtro de keywords (cualquier keyword que contenga la búsqueda)
+      if (lowerKeywords.length > 0) {
+        const keywordConditions = lowerKeywords.map((kw, i) => 
+          `JSON_EXTRACT(LOWER(JSON_EXTRACT(management.keywords, '$[*]')), '$[*]') LIKE :kw${i}`
+        ).join(' OR ');
+        
+        const keywordParams = lowerKeywords.reduce((params, kw, i) => {
+          params[`kw${i}`] = `%${kw}%`;
+          return params;
+        }, {} as Record<string, string>);
+        
+        qb.andWhere(`(${keywordConditions})`, keywordParams);
+      }
       
       qb.skip((page - 1) * perPage)
         .take(perPage)
@@ -443,12 +449,18 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
         countQb.andWhere('management.description LIKE :description', { description: `%${description}%` });
       }
       
-      lowerKeywords.forEach((kw, i) => {
-        countQb.andWhere(
-          `JSON_CONTAINS(LOWER(JSON_EXTRACT(management.keywords, '$[*]')), :kw${i})`,
-          { [`kw${i}`]: `\"${kw}\"` }
-        );
-      });
+      if (lowerKeywords.length > 0) {
+        const keywordConditions = lowerKeywords.map((kw, i) => 
+          `JSON_EXTRACT(LOWER(JSON_EXTRACT(management.keywords, '$[*]')), '$[*]') LIKE :kw${i}`
+        ).join(' OR ');
+        
+        const keywordParams = lowerKeywords.reduce((params, kw, i) => {
+          params[`kw${i}`] = `%${kw}%`;
+          return params;
+        }, {} as Record<string, string>);
+        
+        countQb.andWhere(`(${keywordConditions})`, keywordParams);
+      }
       
       total = await countQb.getCount();
     } else {
