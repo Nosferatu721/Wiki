@@ -25,6 +25,7 @@ const allowedExtensions = [
   '.wmv',
   '.mkv',
   '.pdf',
+  '.odt'
 ];
 
 export const createManagement = async (req: Request, res: Response) => {
