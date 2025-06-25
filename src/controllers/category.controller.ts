@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import { Like } from 'typeorm';
+import { Like, IsNull } from 'typeorm';
 import { Category } from '../entities/Category';
+import { Management } from '../entities/Managements';
 
 export const createCategory = async (req: Request, res: Response) => {
   try {
@@ -24,7 +25,8 @@ export const updateCategory = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name } = req.body;
 
-    if (!name === undefined) return res.status(400).json({ message: 'At least one field (name) is required' });
+    if (!name === undefined)
+      return res.status(400).json({ message: 'At least one field (name) is required' });
 
     const category = await Category.findOneBy({ id: parseInt(id) });
     if (!category) return res.status(404).json({ message: 'Category not found' });
@@ -55,7 +57,7 @@ export const getCategories = async (req: Request, res: Response) => {
   try {
     const { groupId } = req.query;
     const where: any = {};
-    if (groupId !== undefined && groupId !== null && groupId !== "") {
+    if (groupId !== undefined && groupId !== null && groupId !== '') {
       const parsedGroupId = parseInt(groupId as string);
       if (!isNaN(parsedGroupId)) where.groupId = parsedGroupId;
     }
@@ -71,13 +73,23 @@ export const getCategoryById = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { groupId } = req.query;
     const where: any = { id: parseInt(id) };
-    if (groupId !== undefined && groupId !== null && groupId !== "") {
+    if (groupId !== undefined && groupId !== null && groupId !== '') {
       const parsedGroupId = parseInt(groupId as string);
       if (!isNaN(parsedGroupId)) where.groupId = parsedGroupId;
     }
     const category = await Category.findOneBy(where);
+
+    let total_management = 0;
+    if (id && !isNaN(parseInt(id))) {
+      const categoryCountQb = Management.createQueryBuilder('management')
+          .where({ category: { id: id }, deletedAt: IsNull() });
+        total_management = await categoryCountQb.getCount();
+    }
     if (!category) return res.status(404).json({ message: 'Category not found' });
-    return res.status(200).json(category);
+    return res.status(200).json({
+      ...category,
+      total_management,
+    });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error', error });
   }
@@ -102,7 +114,7 @@ export const getCategoriesByName = async (req: Request, res: Response) => {
 
     const where: any = { name: Like(`%${name}%`) };
     if (rrhhId !== undefined) where.rrhhId = rrhhId;
-    if (groupId !== undefined && groupId !== null && groupId !== "") {
+    if (groupId !== undefined && groupId !== null && groupId !== '') {
       const parsedGroupId = parseInt(groupId);
       if (!isNaN(parsedGroupId)) where.groupId = parsedGroupId;
     }
@@ -127,8 +139,8 @@ export const getCategoriesPaginated = async (req: Request, res: Response) => {
     // Obtener filtros opcionales de req.body
     const { name, groupId } = req.body;
     const where: any = {};
-    if (name && name.trim() !== "") where.name = Like(`%${name}%`);
-    if (groupId !== undefined && groupId !== null && groupId !== "") {
+    if (name && name.trim() !== '') where.name = Like(`%${name}%`);
+    if (groupId !== undefined && groupId !== null && groupId !== '') {
       const parsedGroupId = parseInt(groupId);
       if (!isNaN(parsedGroupId)) where.groupId = parsedGroupId;
     }
