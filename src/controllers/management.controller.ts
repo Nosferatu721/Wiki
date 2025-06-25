@@ -380,12 +380,15 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
     if (isNaN(perPage) || perPage < 1) perPage = 5;
 
     // Filtros opcionales desde req.body
-    const { categoryId, title, description, keywords } = req.body || {};
+    const { title, description, keywords } = req.body || {};
+    const categoryIdParam = req.body?.categoryId || req.query.categoryId;
+    const categoryId = categoryIdParam ? parseInt(categoryIdParam as string) : null;
+    
     const where: any = { deletedAt: IsNull() };
-    if (categoryId) where.category = { id: categoryId };
+    if (categoryId !== null && !isNaN(categoryId)) where.category = { id: categoryId };
     if (title) where.title = Like(`%${title}%`);
     if (description) where.description = Like(`%${description}%`);
-
+    
     let data: Management[] = [];
     let total = 0;
     if (keywords && Array.isArray(keywords) && keywords.length > 0) {
@@ -415,17 +418,29 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
       );
       total = await countQb.getCount();
     } else {
-      [data, total] = await Management.findAndCount({
-        relations: ['category'],
-        where,
-        skip: (page - 1) * perPage,
-        take: perPage,
-        order: { id: 'DESC' },
-      });
+      // Usar QueryBuilder para mayor control
+      const qb = Management.createQueryBuilder('management')
+        .leftJoinAndSelect('management.category', 'category')
+        .where(where);
+      
+      // Obtener los datos con paginación
+      data = await qb
+        .skip((page - 1) * perPage)
+        .take(perPage)
+        .orderBy('management.id', 'DESC')
+        .getMany();
+
+      // Obtener el total por separado
+      const countQb = Management.createQueryBuilder('management').where(where);
+      total = await countQb.getCount();
     }
     const lastPage = Math.ceil(total / perPage);
     const baseUrl = req.protocol + '://' + req.get('host') + req.baseUrl + req.path;
-    const makePageUrl = (p: number) => `${baseUrl}?page=${p}&perPage=${perPage}`;
+    const makePageUrl = (p: number) => {
+      let url = `${baseUrl}?page=${p}&perPage=${perPage}`;
+      if (categoryId && !isNaN(categoryId)) url += `&categoryId=${categoryId}`;
+      return url;
+    };
     // Adapt keywords in response: always return as array
     const result = data.map((m) => ({
       ...m,
