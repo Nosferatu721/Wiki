@@ -7,6 +7,7 @@ import YAML from 'yaml';
 import swaggerUi from 'swagger-ui-express';
 import categoryRoutes from './routes/category.routes';
 import managementRoutes from './routes/management.routes';
+import errorRoutes from './routes/error.routes';
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/managements', managementRoutes);
+app.use('/api/errors', errorRoutes);
 
 // Swagger configuration
 const file = fs.readFileSync('./src/docs/swagger.yaml', 'utf8');

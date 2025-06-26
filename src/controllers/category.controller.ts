@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Like, IsNull } from 'typeorm';
 import { Category } from '../entities/Category';
 import { Management } from '../entities/Managements';
+import { logger, logError } from '../utils/logger';
 
 export const createCategory = async (req: Request, res: Response) => {
   try {
@@ -16,7 +17,18 @@ export const createCategory = async (req: Request, res: Response) => {
     const savedCategory = await category.save();
     return res.status(201).json(savedCategory);
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -35,7 +47,18 @@ export const updateCategory = async (req: Request, res: Response) => {
     const updatedCategory = await category.save();
     return res.status(200).json(updatedCategory);
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -49,7 +72,18 @@ export const deleteCategory = async (req: Request, res: Response) => {
     await category.save();
     return res.status(200).send();
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -64,7 +98,18 @@ export const getCategories = async (req: Request, res: Response) => {
     const categories = await Category.find({ where });
     return res.status(200).json(categories);
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -81,9 +126,11 @@ export const getCategoryById = async (req: Request, res: Response) => {
 
     let total_management = 0;
     if (id && !isNaN(parseInt(id))) {
-      const categoryCountQb = Management.createQueryBuilder('management')
-          .where({ category: { id: id }, deletedAt: IsNull() });
-        total_management = await categoryCountQb.getCount();
+      const categoryCountQb = Management.createQueryBuilder('management').where({
+        category: { id: id },
+        deletedAt: IsNull(),
+      });
+      total_management = await categoryCountQb.getCount();
     }
     if (!category) return res.status(404).json({ message: 'Category not found' });
     return res.status(200).json({
@@ -91,7 +138,18 @@ export const getCategoryById = async (req: Request, res: Response) => {
       total_management,
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -103,7 +161,18 @@ export const getCategoriesBySegmentation = async (req: Request, res: Response) =
     const categories = await Category.findBy(query);
     return res.status(200).json(categories);
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -124,7 +193,18 @@ export const getCategoriesByName = async (req: Request, res: Response) => {
     });
     return res.status(200).json(categories);
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -157,8 +237,10 @@ export const getCategoriesPaginated = async (req: Request, res: Response) => {
       data.map(async (category) => {
         let total_management = 0;
         if (category.id && !isNaN(parseInt(category.id.toString()))) {
-          const categoryCountQb = Management.createQueryBuilder('management')
-            .where({ category: { id: category.id }, deletedAt: IsNull() });
+          const categoryCountQb = Management.createQueryBuilder('management').where({
+            category: { id: category.id },
+            deletedAt: IsNull(),
+          });
           total_management = await categoryCountQb.getCount();
         }
         return {
@@ -186,6 +268,17 @@ export const getCategoriesPaginated = async (req: Request, res: Response) => {
       total,
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };

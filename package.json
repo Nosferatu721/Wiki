@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/winston": "^2.4.4",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "morgan": "^1.10.0",
@@ -21,7 +22,8 @@
     "reflect-metadata": "^0.2.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "typeorm": "^0.3.24"
+    "typeorm": "^0.3.24",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.18",

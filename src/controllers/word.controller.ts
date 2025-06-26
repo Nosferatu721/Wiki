@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { exec } from 'child_process';
 import { Management } from '../entities/Managements';
+import { logger, logError } from '../utils/logger';
 
 
 export const convertServerFileWithLibreOffice = async (req: Request, res: Response) => {
@@ -48,7 +49,18 @@ export const convertServerFileWithLibreOffice = async (req: Request, res: Respon
       fs.unlink(pdfPath, () => {});
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Error al convertir archivo con LibreOffice', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -75,6 +87,17 @@ export const convertBlobWithLibreOffice = async (req: Request, res: Response) =>
       fs.unlink(filePath, () => {});
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Error converting blob file with LibreOffice', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Like, IsNull } from 'typeorm';
 import { Management } from '../entities/Managements';
 import { Category } from '../entities/Category';
+import { logger, logError } from '../utils/logger';
 import fs from 'fs';
 import path from 'path';
 
@@ -108,8 +109,18 @@ export const createManagement = async (req: Request, res: Response) => {
     const savedManagement = await management.save();
     return res.status(201).json(savedManagement);
   } catch (error) {
-    console.error('Error creating management:', error);
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -216,7 +227,18 @@ export const updateManagement = async (req: Request, res: Response) => {
     await management.save();
     return res.status(200).send();
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -245,7 +267,18 @@ export const addFileToManagement = async (req: Request, res: Response) => {
     const updatedManagement = await management.save();
     return res.status(200).json(updatedManagement);
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -296,7 +329,18 @@ export const deleteFilesFromManagement = async (req: Request, res: Response) => 
     const updatedManagement = await management.save();
     return res.status(200).json(updatedManagement);
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -349,7 +393,18 @@ export const updateFilesInManagement = async (req: Request, res: Response) => {
     const updatedManagement = await management.save();
     return res.status(200).json(updatedManagement);
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -367,7 +422,18 @@ export const getManagements = async (req: Request, res: Response) => {
     }));
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -515,7 +581,18 @@ export const getManagementsPaginated = async (req: Request, res: Response) => {
       total_for_category
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -536,7 +613,18 @@ export const getManagementById = async (req: Request, res: Response) => {
       keywords: Array.isArray(management.keywords) ? management.keywords : [],
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
 
@@ -566,6 +654,17 @@ export const deleteManagement = async (req: Request, res: Response) => {
     await Management.remove(management);
     return res.status(200).send();
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error', error });
+    logError(
+      req.method,
+      req.params,
+      req.query,
+      req.body,
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
